@@ -2,6 +2,9 @@
 {% set art = [] %}
 {% set rep = [] %}
 {% set years = [] %}
+{% set quartileQ1 = [] %}
+{% set quartileQ2 = [] %}
+{% set quartileQ12 = [] %}
 
 {% set scopus = [] %}
 {% set nonScopus = [] %}
@@ -44,11 +47,16 @@
     {% set artLen = 0 %}
     {% set repLen = 0 %}
     {% set scopusSum = 0 %}
+    {% set quartileQ1Len = 0 %}
+    {% set quartileQ2Len = 0 %}
+    {% set quartileQ12Len = 0 %}
 
     {% for publication in posts %}
         {% set year = publication.get_field('year') %}
         {% set type = publication.get_field('type') %}
         {% set nextyear = posts[loop.index0 + 1].get_field('year') %}
+        {% set quartile = publication.get_field('quartile')|default('') %}
+        {% set normalizedQuartile = quartile|upper|replace({'\\':'/'}) %}
 
         {% if type == 'Стаття' %}
             {% set artLen = artLen + 1 %}
@@ -59,7 +67,15 @@
         {% if publication.scopus %}
             {% set scopusSum = scopusSum + 1 %}
         {% endif %}
-        
+
+        {% if normalizedQuartile == 'Q1' %}
+            {% set quartileQ1Len = quartileQ1Len + 1 %}
+        {% elseif normalizedQuartile == 'Q2' %}
+            {% set quartileQ2Len = quartileQ2Len + 1 %}
+        {% elseif normalizedQuartile == 'Q1/Q2' %}
+            {% set quartileQ12Len = quartileQ12Len + 1 %}
+        {% endif %}
+
         {% if nextyear != year %}
             {% set link = function('get_translation', '/ua', '/en') ~ '/publications/' ~ year %}
             {% set art = art|merge([artLen]) %}
@@ -67,6 +83,9 @@
             {% set scopus = scopus|merge([scopusSum]) %}
             {% set nonScopusSum = artLen + repLen - scopusSum %}
             {% set nonScopus = nonScopus|merge([nonScopusSum]) %}
+            {% set quartileQ1 = quartileQ1|merge([quartileQ1Len]) %}
+            {% set quartileQ2 = quartileQ2|merge([quartileQ2Len]) %}
+            {% set quartileQ12 = quartileQ12|merge([quartileQ12Len]) %}
 
             <div class="main__block">
                 <div class="row">
@@ -96,6 +115,9 @@
             {% set artLen = 0 %}
             {% set repLen = 0 %}
             {% set scopusSum = 0 %}
+            {% set quartileQ1Len = 0 %}
+            {% set quartileQ2Len = 0 %}
+            {% set quartileQ12Len = 0 %}
 
         {% endif %}
 
@@ -142,13 +164,43 @@ window.chart = new Chart(ctx, {
             pointHoverRadius: 5,
             fill: false
         },
-        { 
+        {
             data: [{{nonScopus|reverse|join(',')}}],
             label: "Решта статей та доповідей",
             borderColor: "#5FA55E",
             pointBackgroundColor: "#5FA55E",
             pointHoverBackgroundColor: "#5FA55E",
             backgroundColor: "#5FA55E",
+            pointHoverRadius: 5,
+            fill: false
+        },
+        {
+            data: [{{quartileQ1|reverse|join(',')}}],
+            label: "Q1",
+            borderColor: "#1C7C54",
+            pointBackgroundColor: "#1C7C54",
+            pointHoverBackgroundColor: "#1C7C54",
+            backgroundColor: "#1C7C54",
+            pointHoverRadius: 5,
+            fill: false
+        },
+        {
+            data: [{{quartileQ2|reverse|join(',')}}],
+            label: "Q2",
+            borderColor: "#EF6F6C",
+            pointBackgroundColor: "#EF6F6C",
+            pointHoverBackgroundColor: "#EF6F6C",
+            backgroundColor: "#EF6F6C",
+            pointHoverRadius: 5,
+            fill: false
+        },
+        {
+            data: [{{quartileQ12|reverse|join(',')}}],
+            label: "Q1/Q2",
+            borderColor: "#F4B942",
+            pointBackgroundColor: "#F4B942",
+            pointHoverBackgroundColor: "#F4B942",
+            backgroundColor: "#F4B942",
             pointHoverRadius: 5,
             fill: false
         }
