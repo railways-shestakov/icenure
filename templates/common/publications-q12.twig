@@ -1,14 +1,4 @@
-{% set grouped = {} %}
-
-{% for publication in posts %}
-    {% set year = publication.get_field('year') %}
-    {% if year %}
-        {% set existing = grouped[year]|default([]) %}
-        {% set grouped = grouped|merge({ (year): existing|merge([publication]) }) %}
-    {% endif %}
-{% endfor %}
-
-{% set years = grouped|keys|sort|reverse %}
+{% set currentYear = "now"|date("Y") %}
 
 <h1 class="main__title">
     {{ title }}
@@ -16,27 +6,29 @@
 
 <section>
     <div class="main__block main__page">
-        {% for year in years %}
-            <div class="title">
-                {{ year }} {{ function('get_translation', 'рік', 'year') }}
-            </div>
 
-            {% set publicationsForYear = grouped[year] %}
+        {# итерация от текущего года до 2000 #}
+        {% for year in currentYear..2000 %}
             {% set articles = [] %}
             {% set reports = [] %}
 
-            {% for item in publicationsForYear %}
-                {% set type = item.get_field('type') %}
-                {% if type == 'Стаття' %}
-                    {% set articles = articles|merge([item]) %}
-                {% else %}
-                    {% set reports = reports|merge([item]) %}
+            {# внутренний цикл: выбираем публикации с совпадающим годом #}
+            {% for publication in posts %}
+                {% set pubYear = publication.get_field('year') %}
+                {% if pubYear == year %}
+                    {% set type = publication.get_field('type') %}
+                    {% if type == 'Стаття' %}
+                        {% set articles = articles|merge([publication]) %}
+                    {% else %}
+                        {% set reports = reports|merge([publication]) %}
+                    {% endif %}
                 {% endif %}
             {% endfor %}
 
-            {% if articles %}
+            {# если за этот год есть публикации — выводим #}
+            {% if articles|length > 0 or reports|length > 0 %}
                 <div class="title">
-                    {{ function('get_translation', "Статті", "Articles") }}
+                    {{ year }} {{ function('get_translation', 'рік', 'year') }}
                 </div>
 
                 {% for item in articles %}
@@ -50,70 +42,19 @@
                     <div class='publication'>
                         <div class='publication--authors'>
                             {{ loop.index }}. {{ authors }}
-                            {% if scopus != false %}
-                                <div class='tag tag--blue'>
-                                    Scopus
-                                </div>
+                            {% if scopus %}
+                                <div class='tag tag--blue'>Scopus</div>
                             {% endif %}
-                            {% if wos != false %}
-                                <div class='tag tag--blue'>
-                                    WoS
-                                </div>
+                            {% if wos %}
+                                <div class='tag tag--blue'>WoS</div>
                             {% endif %}
-                            {% if quartile != '' %}
-                                <div class='tag tag--green'>
-                                    {{ quartile }}
-                                </div>
+                            {% if quartile %}
+                                <div class='tag tag--green'>{{ quartile }}</div>
                             {% endif %}
-                            {% if doi != '' %}
+                            {% if doi %}
                                 <div class='tag tag--brown'>
                                     DOI
-                                    <a href='{{ doi }}' target='blank' rel='nofollow'></a>
-                                </div>
-                            {% endif %}
-                        </div>
-                        <div class='publication--text'>
-                            {{ text }}
-                        </div>
-                    </div>
-                {% endfor %}
-            {% endif %}
-
-            {% if reports %}
-                <div class="title">
-                    {{ function('get_translation', "Доповіді", "Reports") }}
-                </div>
-
-                {% for item in reports %}
-                    {% set authors = item.get_field('authors') %}
-                    {% set text = item.text %}
-                    {% set wos = item.wos %}
-                    {% set scopus = item.scopus %}
-                    {% set doi = item.doi %}
-                    {% set quartile = item.quartile %}
-
-                    <div class='publication'>
-                        <div class='publication--authors'>
-                            {{ loop.index }}. {{ authors }}
-                            {% if scopus != false %}
-                                <div class='tag tag--blue'>
-                                    Scopus
-                                </div>
-                            {% endif %}
-                            {% if wos != false %}
-                                <div class='tag tag--blue'>
-                                    WoS
-                                </div>
-                            {% endif %}
-                            {% if quartile != '' %}
-                                <div class='tag tag--green'>
-                                    {{ quartile }}
-                                </div>
-                            {% endif %}
-                            {% if doi != '' %}
-                                <div class='tag tag--brown'>
-                                    DOI
-                                    <a href='{{ doi }}' target='blank' rel='nofollow'></a>
+                                    <a href='{{ doi }}' target='_blank' rel='nofollow'></a>
                                 </div>
                             {% endif %}
                         </div>
