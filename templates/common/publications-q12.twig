@@ -1,0 +1,128 @@
+{% set grouped = {} %}
+
+{% for publication in posts %}
+    {% set year = publication.get_field('year') %}
+    {% if year %}
+        {% set existing = grouped[year]|default([]) %}
+        {% set grouped = grouped|merge({ (year): existing|merge([publication]) }) %}
+    {% endif %}
+{% endfor %}
+
+{% set years = grouped|keys|sort|reverse %}
+
+<h1 class="main__title">
+    {{ title }}
+</h1>
+
+<section>
+    <div class="main__block main__page">
+        {% for year in years %}
+            <div class="title">
+                {{ year }} {{ function('get_translation', 'рік', 'year') }}
+            </div>
+
+            {% set publicationsForYear = grouped[year] %}
+            {% set articles = [] %}
+            {% set reports = [] %}
+
+            {% for item in publicationsForYear %}
+                {% set type = item.get_field('type') %}
+                {% if type == 'Стаття' %}
+                    {% set articles = articles|merge([item]) %}
+                {% else %}
+                    {% set reports = reports|merge([item]) %}
+                {% endif %}
+            {% endfor %}
+
+            {% if articles %}
+                <div class="title">
+                    {{ function('get_translation', "Статті", "Articles") }}
+                </div>
+
+                {% for item in articles %}
+                    {% set authors = item.get_field('authors') %}
+                    {% set text = item.text %}
+                    {% set wos = item.wos %}
+                    {% set scopus = item.scopus %}
+                    {% set doi = item.doi %}
+                    {% set quartile = item.quartile %}
+
+                    <div class='publication'>
+                        <div class='publication--authors'>
+                            {{ loop.index }}. {{ authors }}
+                            {% if scopus != false %}
+                                <div class='tag tag--blue'>
+                                    Scopus
+                                </div>
+                            {% endif %}
+                            {% if wos != false %}
+                                <div class='tag tag--blue'>
+                                    WoS
+                                </div>
+                            {% endif %}
+                            {% if quartile != '' %}
+                                <div class='tag tag--green'>
+                                    {{ quartile }}
+                                </div>
+                            {% endif %}
+                            {% if doi != '' %}
+                                <div class='tag tag--brown'>
+                                    DOI
+                                    <a href='{{ doi }}' target='blank' rel='nofollow'></a>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class='publication--text'>
+                            {{ text }}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% if reports %}
+                <div class="title">
+                    {{ function('get_translation', "Доповіді", "Reports") }}
+                </div>
+
+                {% for item in reports %}
+                    {% set authors = item.get_field('authors') %}
+                    {% set text = item.text %}
+                    {% set wos = item.wos %}
+                    {% set scopus = item.scopus %}
+                    {% set doi = item.doi %}
+                    {% set quartile = item.quartile %}
+
+                    <div class='publication'>
+                        <div class='publication--authors'>
+                            {{ loop.index }}. {{ authors }}
+                            {% if scopus != false %}
+                                <div class='tag tag--blue'>
+                                    Scopus
+                                </div>
+                            {% endif %}
+                            {% if wos != false %}
+                                <div class='tag tag--blue'>
+                                    WoS
+                                </div>
+                            {% endif %}
+                            {% if quartile != '' %}
+                                <div class='tag tag--green'>
+                                    {{ quartile }}
+                                </div>
+                            {% endif %}
+                            {% if doi != '' %}
+                                <div class='tag tag--brown'>
+                                    DOI
+                                    <a href='{{ doi }}' target='blank' rel='nofollow'></a>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class='publication--text'>
+                            {{ text }}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endfor %}
+    </div>
+</section>
