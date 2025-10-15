@@ -1,10 +1,55 @@
 {% set currentYear = "now"|date("Y") %}
+{% set totalArticles = posts|length %}
+{% set years = [] %}
+{% set quartileQ1 = [] %}
+{% set quartileQ2 = [] %}
+{% set quartileQ12 = [] %}
+{% set quartileQ1Len = 0 %}
+{% set quartileQ2Len = 0 %}
+{% set quartileQ12Len = 0 %}
 
-<h1 class="main__title">
+{% for publication in posts %}
+    {% set year = publication.get_field('year') %}
+    {% set quartile = publication.get_field('quartile')|default('') %}
+    {% set normalizedQuartile = quartile|upper|replace({'\\':'/'}) %}
+
+    {% if normalizedQuartile == 'Q1' %}
+        {% set quartileQ1Len = quartileQ1Len + 1 %}
+        {% set quartileQ12Len = quartileQ12Len + 1 %}
+    {% elseif normalizedQuartile == 'Q2' %}
+        {% set quartileQ2Len = quartileQ2Len + 1 %}
+        {% set quartileQ12Len = quartileQ12Len + 1 %}
+    {% endif %}
+
+    {% set nextPublication = posts[loop.index0 + 1]|default(null) %}
+    {% set nextyear = nextPublication ? nextPublication.get_field('year') : 0 %}
+
+    {% if nextyear != year %}
+        {% set years = years|merge([year]) %}
+        {% set quartileQ1 = quartileQ1|merge([quartileQ1Len]) %}
+        {% set quartileQ2 = quartileQ2|merge([quartileQ2Len]) %}
+        {% set quartileQ12 = quartileQ12|merge([quartileQ12Len]) %}
+
+        {% set quartileQ1Len = 0 %}
+        {% set quartileQ2Len = 0 %}
+        {% set quartileQ12Len = 0 %}
+    {% endif %}
+{% endfor %}
+
+<h1 class="main__title main__title--aside">
     {{ title }}
+    <div class="main__subtitle">
+        Усього {{ totalArticles }} {{ function('get_wordform', totalArticles, 'стаття', 'статті', 'статей') }}
+    </div>
 </h1>
 
 <section>
+    {% if years|length > 0 %}
+        <div class="main__block main__chart">
+            <canvas id="cursor" width="730px" height="203px"></canvas>
+            <canvas id="publicationChart" width="100" height="40"></canvas>
+        </div>
+    {% endif %}
     <div class="main__block main__page">
 
         {# итерация от текущего года до 2000 #}
@@ -67,3 +112,114 @@
         {% endfor %}
     </div>
 </section>
+
+{% if years|length > 0 %}
+<script>
+Chart.defaults.global.defaultFontSize = 14;
+Chart.defaults.global.defaultFontColor = '#2F536D';
+Chart.defaults.global.defaultFontFamily = 'Montserrat';
+let ctx = document.getElementById('publicationChart').getContext('2d');
+window.chart = new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: [{{ years|reverse|join(',') }}],
+    datasets: [
+        {
+            data: [{{ quartileQ1|reverse|join(',') }}],
+            label: "Q1",
+            borderColor: "#1C7C54",
+            pointBackgroundColor: "#1C7C54",
+            pointHoverBackgroundColor: "#1C7C54",
+            backgroundColor: "#1C7C54",
+            pointHoverRadius: 5,
+            fill: false
+        },
+        {
+            data: [{{ quartileQ2|reverse|join(',') }}],
+            label: "Q2",
+            borderColor: "#EF6F6C",
+            pointBackgroundColor: "#EF6F6C",
+            pointHoverBackgroundColor: "#EF6F6C",
+            backgroundColor: "#EF6F6C",
+            pointHoverRadius: 5,
+            fill: false
+        },
+        {
+            data: [{{ quartileQ12|reverse|join(',') }}],
+            label: "Q1/Q2",
+            borderColor: "#F4B942",
+            pointBackgroundColor: "#F4B942",
+            pointHoverBackgroundColor: "#F4B942",
+            backgroundColor: "#F4B942",
+            pointHoverRadius: 5,
+            fill: false
+        }
+    ],
+  },
+  options: {
+    responsive: true,
+    title: {
+      display: true,
+      text: 'Статистика публікацій за роками',
+      fontSize: 16
+    },
+    tooltips: {
+      mode: 'label',
+      intersect: false
+    },
+    legend: {
+        align: 'start',
+        position: 'bottom',
+        labels: {
+            fontSize: 14,
+            usePointStyle: true,
+            boxWidth: 10,
+        }
+    },
+    scales: {
+        yAxes: [
+            {
+                ticks: {
+                    precision: 0,
+                },
+            },
+        ],
+    }
+  }
+});
+
+{% if dark_mode %}
+    Chart.defaults.global.defaultFontColor = '#ffffff';
+    let yAxes = chart.options.scales.yAxes;
+    let xAxes = chart.options.scales.xAxes;
+
+    for(let key in yAxes){
+        yAxes[key].gridLines.zeroLineColor = 'rgba(255,255,255,.25)';
+        yAxes[key].gridLines.color = 'rgba(255,255,255,.1)';
+    }
+
+    for(let key in xAxes){
+        xAxes[key].gridLines.zeroLineColor = 'rgba(255,255,255,.25)';
+        xAxes[key].gridLines.color = 'rgba(255,255,255,.1)';
+    }
+{% endif %}
+
+$(document).ready(function(){
+    $('#publicationChart').on("mousemove", function(e) {
+        let element = $("#cursor");
+                let domElement = element[0];
+        let offsetLeft = domElement.getBoundingClientRect().left;
+                let clientX = (e.clientX - offsetLeft);
+                let ctx = domElement.getContext('2d');
+
+        ctx.clearRect(0, 0, domElement.width, domElement.height);
+        ctx.beginPath();
+        ctx.moveTo(clientX, 0);
+        ctx.lineTo(clientX, domElement.height);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "#E5E5E5";
+        ctx.stroke();
+    });
+});
+</script>
+{% endif %}
