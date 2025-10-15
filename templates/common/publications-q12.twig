@@ -1,0 +1,69 @@
+{% set currentYear = "now"|date("Y") %}
+
+<h1 class="main__title">
+    {{ title }}
+</h1>
+
+<section>
+    <div class="main__block main__page">
+
+        {# итерация от текущего года до 2000 #}
+        {% for year in currentYear..2000 %}
+            {% set articles = [] %}
+            {% set reports = [] %}
+
+            {# внутренний цикл: выбираем публикации с совпадающим годом #}
+            {% for publication in posts %}
+                {% set pubYear = publication.get_field('year') %}
+                {% if pubYear == year %}
+                    {% set type = publication.get_field('type') %}
+                    {% if type == 'Стаття' %}
+                        {% set articles = articles|merge([publication]) %}
+                    {% else %}
+                        {% set reports = reports|merge([publication]) %}
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+
+            {# если за этот год есть публикации — выводим #}
+            {% if articles|length > 0 or reports|length > 0 %}
+                <div class="title">
+                    {{ year }} {{ function('get_translation', 'рік', 'year') }}
+                </div>
+
+                {% for item in articles %}
+                    {% set authors = item.get_field('authors') %}
+                    {% set text = item.text %}
+                    {% set wos = item.wos %}
+                    {% set scopus = item.scopus %}
+                    {% set doi = item.doi %}
+                    {% set quartile = item.quartile %}
+
+                    <div class='publication'>
+                        <div class='publication--authors'>
+                            {{ loop.index }}. {{ authors }}
+                            {% if scopus %}
+                                <div class='tag tag--blue'>Scopus</div>
+                            {% endif %}
+                            {% if wos %}
+                                <div class='tag tag--blue'>WoS</div>
+                            {% endif %}
+                            {% if quartile %}
+                                <div class='tag tag--green'>{{ quartile }}</div>
+                            {% endif %}
+                            {% if doi %}
+                                <div class='tag tag--brown'>
+                                    DOI
+                                    <a href='{{ doi }}' target='_blank' rel='nofollow'></a>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class='publication--text'>
+                            {{ text }}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endfor %}
+    </div>
+</section>
