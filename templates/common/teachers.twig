@@ -1,0 +1,440 @@
+{% set html %}
+
+<h1 class="main__title main__title--aside">
+    {# {{ (posts|first).get_field('category') }} #}
+    {{ function('get_translation', 'Завідувач кафедри', 'Head of Department') }}
+
+    <div>
+        <a href='#' class='js-show-statistics handler'>
+            <span class='active'>
+                {{ function('get_translation', 'Переглянути статистику по викладачам', 'View statistics by teachers') }}
+            </span>
+            <span>
+                {{ function('get_translation', 'Сховати статистику по викладачам', 'Hide statistics on teachers') }}
+            </span>
+        </a>
+    </div>
+</h1>
+
+<section>
+
+    {% set last_category = '' %}
+    {% set averageAge = 0 %}
+    {% set numAge = 0 %}
+
+    {% set maleSum = 0 %}
+    {% set femaleSum = 0 %}
+
+    {% set proffesors = 1 %}
+    {% set docents = 0 %}
+    {% set teachers = 0 %}
+    {% set assistants = 0 %}
+
+    {% set before35 = 0 %}
+    {% set between35and55 = 0 %}
+    {% set after55 = 0 %}
+
+    {% set dtn = 0 %}
+    {% set ktn = 0 %}
+    {% set the_rest = 0 %}
+
+    {% for teacher in posts %}
+        {% set name = function('get_translation', teacher.get_field('name_ua'), teacher.get_field('name_en')) %}
+        {% set content = function('get_translation', teacher.get_field('content_ua'), teacher.get_field('content_en')) %}
+        {% set image = function('wp_get_attachment_image_src', teacher.image, 'rta_thumb_no_cropped_480x')[0] %}
+        {% set link = function('get_translation', '', '/en') ~ '/teaching-staff/' ~ teacher.slug %}
+        {% set age = teacher.birthday %}
+        {% set sex = teacher.sex %}
+        {% set scientific_degree = teacher.scientific_degree %}
+
+        {% if scientific_degree == 'Доктор наук' %}
+            {% set dtn = dtn + 1 %}
+        {% elseif scientific_degree == 'Кандидат наук' %}
+            {% set ktn = ktn + 1 %}
+        {% else %}
+            {% set the_rest = the_rest + 1 %}
+        {% endif %}
+
+        {% set years = function('get_age', age)|round(0, 'floor') %}
+
+        {% if years < 35 %}
+            {% set before35 = before35 + 1 %}
+        {% elseif years >= 35 and years <= 55 %}
+            {% set between35and55 = between35and55 + 1 %}
+        {% else %}
+            {% set after55 = after55 + 1 %}
+        {% endif %}
+
+        {% if age != "" %}
+            {% set numAge = numAge + 1 %}
+            {% set averageAge = averageAge + function('get_age', age) %}
+        {% endif %}
+
+        {% set category = teacher.get_field('category') %}
+
+        {% if sex == 'Чоловіча' %}
+            {% set maleSum = maleSum + 1 %}
+        {% else %}
+            {% set femaleSum = femaleSum + 1 %}
+        {% endif %}
+
+        {% if category == 'Професор кафедри' %}
+            {% set proffesors = proffesors + 1 %}
+        {% endif %}
+
+        {% if category == 'Доцент кафедри' %}
+            {% set docents = docents + 1 %}
+        {% endif %}
+
+        {% if category == 'Старший викладач' %}
+            {% set teachers = teachers + 1 %}
+        {% endif %}
+
+        {% if category == 'Асистент кафедри' %}
+            {% set assistants = assistants + 1 %}
+        {% endif %}
+
+        {% if category != last_category and last_category != '' %}
+
+            {% set cat = function('get_translation', 'Професори кафедри', 'Professors of Department') %}
+
+            {% if category == 'Професор кафедри' %}
+                {% set cat = function('get_translation', 'Професори кафедри', 'Professors of Department') %}
+            {% endif %}
+
+            {% if category == 'Доцент кафедри' %}
+                {% set cat = function('get_translation', 'Доценти кафедри', 'Associate professors') %}
+            {% endif %}
+
+            {% if category == 'Старший викладач' %}
+                {% set cat = function('get_translation', 'Старші викладачі', 'Senior teachers') %}
+            {% endif %}
+
+            {% if category == 'Асистент кафедри' %}
+                {% set cat = function('get_translation', 'Асистенти кафедри', 'Department assistants') %}
+            {% endif %}
+
+            <h1 class="main__title">
+                {{cat}}
+            </h1>
+        {% endif %}
+
+        {% set last_category = category %}
+
+        {% set content = function('get_more', content) %}
+
+        {% set size = function('getimagesize', image) %}
+        {% set width = size[0] %}
+        {% set height = size[1] %}
+
+        {% set shiftX = teacher.get_field('shift-x') %}
+
+        <div class="main__block main__block--teacher">
+            <div class="row">
+                <div class="row__image">
+                    <img src='{{theme_dir}}/images/loader.svg' data-src='{{image}}' style="{{shiftX ? "margin-left:" ~ shiftX ~ "%;" : ""}} {{width < height ? 'max-height: initial; max-width: 100%;' : ''}}" alt="">
+                </div>
+                <div>
+                    <div class="row__name">
+                        <a href='{{link}}'>
+                            {{name}}
+                        </a>
+                    </div>
+                    <div class="row__content">
+                        {{content}}
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    {% endfor %}
+</section>
+
+{% endset %}
+
+<section class='section section--statistics toggle'>
+    <h1 class="main__title">
+        {{ function('get_translation', 'Статистика по професорсько-викладацькому складу', 'Department statistics') }}
+    </h1>
+
+    <div class="main__block main__chart main__chart--flex">
+
+        <div>
+            <canvas id="ageChart"></canvas>
+        </div>
+
+        <div>
+            <canvas id="positionChart"></canvas>
+        </div>
+
+        <div>
+            <canvas id="teachersAgeChart"></canvas>
+        </div>
+
+        <div>
+            <canvas id="degreeChart"></canvas>
+        </div>
+
+        <div class='number' style="display: none;">
+
+            <div class="number--digit">
+                {% if numAge != 0 %}
+                    {{ (averageAge / numAge)|round(2)|number_format(2, ',', ',') }}
+                {% else %} 
+                    49,19
+                {% endif %}
+            </div>
+            
+            <div class="number--text">
+                Середній вік викладача
+            </div>
+            
+        </div>
+
+        <div class='number' style="display: none;">
+        
+            <div class="number--digit">
+                {{ posts|length }}
+            </div>
+            
+            <div class="number--text">
+                Кількість викладачів
+            </div>
+            
+        </div>
+
+    </div>
+</section>
+
+ <script>
+Chart.defaults.global.defaultFontSize = 14;
+Chart.defaults.global.defaultFontColor = '#2F536D';
+Chart.defaults.global.defaultFontFamily = 'Montserrat';
+
+let ctx = document.getElementById('ageChart').getContext('2d');
+window.chart = new Chart(ctx, {
+  type: 'doughnut',
+  data: {
+    datasets: [{
+        data: [
+            {{maleSum}},
+            {{femaleSum}}
+        ],
+        backgroundColor: [
+            "#3e95cd",
+            "#8e5ea2"
+        ],
+        borderColor: "transparent"
+    }],
+	labels: [
+		{{ function('get_translation', '"Чоловіки"', '"Men"') }},
+		{{ function('get_translation', '"Жінки"', '"Women"') }},
+	]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    title: {
+      display: true,
+      text: {{ function('get_translation', '"Розподіл за статтю"', '"Distribution by sex"') }},
+      fontSize: 18
+    },
+    tooltips: {
+      mode: 'label',
+      intersect: false
+    },
+    legend: {
+        align: 'center',
+        position: 'bottom',
+        labels: {
+            fontSize: 14,
+            usePointStyle: true,
+            boxWidth: 10,
+        }
+    },
+    plugins: {
+        labels: {
+            render: 'value',
+            fontSize: 14,
+            fontStyle: 'bold',
+            fontColor: '#fff'
+        }
+    }
+  }
+});
+
+let ctx2 = document.getElementById('positionChart').getContext('2d');
+window.chart2 = new Chart(ctx2, {
+  type: 'doughnut',
+  data: {
+    datasets: [{
+        data: [
+            {{docents}},
+            {{proffesors}},
+            {{teachers}},
+            {{assistants}}
+        ],
+        backgroundColor: [
+            "#3e95cd",
+            "#8e5ea2",
+            "#ea5f65",
+            "#5fa55e"
+        ],
+        borderColor: "transparent"
+    }],
+	labels: [
+        {{ function('get_translation', '"Доценти"', '"Associate professors"') }},
+		{{ function('get_translation', '"Професори"', '"Professors"') }},
+        {{ function('get_translation', '"Старші викладачі"', '"Senior teachers"') }},
+        {{ function('get_translation', '"Асистенти"', '"Assistants"') }}
+	]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    title: {
+      display: true,
+      text: {{ function('get_translation', '"Розподіл за посадою"', '"Distribution by position"') }},
+      fontSize: 18
+    },
+    tooltips: {
+      mode: 'label',
+      intersect: false
+    },
+    legend: {
+        align: 'center',
+        position: 'bottom',
+        labels: {
+            fontSize: 14,
+            usePointStyle: true,
+            boxWidth: 10,
+        }
+    },
+    plugins: {
+        labels: {
+            render: 'value',
+            fontSize: 14,
+            fontStyle: 'bold',
+            fontColor: '#fff'
+        }
+    }
+  }
+});
+
+let ctx3 = document.getElementById('teachersAgeChart').getContext('2d');
+window.chart3 = new Chart(ctx3, {
+  type: 'doughnut',
+  data: {
+    datasets: [{
+        data: [
+            {{before35}},
+            {{between35and55}},
+            {{after55}}
+        ],
+        backgroundColor: [
+            "#3e95cd",
+            "#8e5ea2",
+            "#ea5f65"
+        ],
+        borderColor: "transparent"
+    }],
+	labels: [
+        {{ function('get_translation', '"До 35 років"', '"Up to 35 years"') }},
+		{{ function('get_translation', '"Від 35 до 55 років"', '"From 35 to 55 years"') }},
+        {{ function('get_translation', '"За 55 років"', '"For 55 years"') }}
+	]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    title: {
+      display: true,
+      text: {{ function('get_translation', '"Віковий розподіл"', '"Age distribution"') }},
+      fontSize: 18
+    },
+    tooltips: {
+      mode: 'label',
+      intersect: false
+    },
+    legend: {
+        align: 'center',
+        position: 'bottom',
+        labels: {
+            fontSize: 14,
+            usePointStyle: true,
+            boxWidth: 10,
+        }
+    },
+    plugins: {
+        labels: {
+            render: 'value',
+            fontSize: 14,
+            fontStyle: 'bold',
+            fontColor: '#fff'
+        }
+    }
+  }
+});
+
+let ctx4 = document.getElementById('degreeChart').getContext('2d');
+window.chart4 = new Chart(ctx4, {
+  type: 'doughnut',
+  data: {
+    datasets: [{
+        data: [
+            {{dtn}},
+            {{ktn}},
+            {{the_rest}}
+        ],
+        backgroundColor: [
+            "#3e95cd",
+            "#8e5ea2",
+            "#ea5f65"
+        ],
+        borderColor: "transparent"
+    }],
+	labels: [
+        {{ function('get_translation', '"Доктори наук"', '"Ph.D"') }},
+		{{ function('get_translation', '"Кандидати наук"', '"Candidate of Sciences"') }},
+        {{ function('get_translation', '"Інші"', '"Rest"') }}
+	]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    title: {
+      display: true,
+      text: {{ function('get_translation', '"Розподіл за науковим ступенем"', '"Distribution by scientific degree"') }},
+      fontSize: 18
+    },
+    tooltips: {
+      mode: 'label',
+      intersect: false
+    },
+    legend: {
+        align: 'center',
+        position: 'bottom',
+        labels: {
+            fontSize: 14,
+            usePointStyle: true,
+            boxWidth: 10,
+        }
+    },
+    plugins: {
+        labels: {
+            render: 'value',
+            fontSize: 14,
+            fontStyle: 'bold',
+            fontColor: '#fff'
+        }
+    }
+  }
+});
+
+{% if dark_mode %}
+    Chart.defaults.global.defaultFontColor = '#ffffff';
+{% endif %}
+
+</script>
+
+{{html}}

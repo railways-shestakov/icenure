@@ -1,0 +1,119 @@
+<h1 class="main__title{{icon}}">
+   {{title}}
+</h1>
+
+{% set works = "" %}
+
+{% for page in posts %}
+    {% set works = page.get_field('works') %}
+{% endfor %}
+
+<section>
+    <div class='main__block main__page'>
+
+        <div class="title">
+            Держбюджетна тематика наукових досліджень кафедри ІКІ
+        </div>
+        
+        {% for work in works %}
+            {% set shifr = work.shifr %}
+            {% set number = work.number %}
+            {% set name = work.name %}
+            {% set manager = work.manager %}
+            {% set worker = work.worker %}
+            {% set time_range = work.time_range %}
+            {% set category = work.category %}
+
+            {% if category == "Держбюджетна тематика наукових досліджень кафедри ІКІ" %}
+                <p>
+                    <div class='research__title'> {{name}}</div>
+                    {% if shifr != "" %}
+                        Шифр НДР: {{shifr}}<br>
+                    {% endif %}
+                    {% if number != "" %}
+                        Державний реєстраційний номер: {{number}}<br>
+                    {% endif %}
+                    {% if manager != "" %}
+                        Науковий керівник: {{manager}}<br>
+                    {% endif %}
+                    {% if worker != "" %}
+                        Відповідальний виконавець: {{worker}}<br>
+                    {% endif %}
+                    {% if time_range != "" %}
+                        Термін виконання: {{time_range}}
+                    {% endif %}
+                </p>
+            {% endif %}
+        {% endfor %}
+
+        <div class="title">
+            Госпдоговірна тематика наукових досліджень кафедри ІКІ
+        </div>
+
+        {% for work in works %}
+            {% set shifr = work.shifr %}
+            {% set number = work.number %}
+            {% set name = work.name %}
+            {% set manager = work.manager %}
+            {% set worker = work.worker %}
+            {% set time_range = work.time_range %}
+            {% set category = work.category %}
+
+            {% if category == "Госпдоговірна тематика наукових досліджень кафедри ІКІ" %}
+                <p>
+                    <div class='research__title'> {{name}}</div>
+                    {% if shifr != "" %}
+                        Шифр НДР: {{shifr}}<br>
+                    {% endif %}
+                    {% if number != "" %}
+                        Державний реєстраційний номер: {{number}}<br>
+                    {% endif %}
+                    {% if manager != "" %}
+                        Науковий керівник: {{manager}}<br>
+                    {% endif %}
+                    {% if worker != "" %}
+                        Відповідальний виконавець: {{worker}}<br>
+                    {% endif %}
+                    {% if time_range != "" %}
+                        Термін виконання: {{time_range}}
+                    {% endif %}
+                </p>
+            {% endif %}
+        {% endfor %}
+
+        <div class="title">
+            Базове фінансування наукових досліджень кафедри ІКІ
+        </div>
+
+        {% for work in works %}
+            {% set shifr = work.shifr %}
+            {% set number = work.number %}
+            {% set name = work.name %}
+            {% set manager = work.manager %}
+            {% set worker = work.worker %}
+            {% set time_range = work.time_range %}
+            {% set category = work.category %}
+
+            {% if category == "Базове фінансування наукових досліджень кафедри ІКІ" %}
+                <p>
+                    <div class='research__title'> {{name}}</div>
+                    {% if shifr != "" %}
+                        Шифр НДР: {{shifr}}<br>
+                    {% endif %}
+                    {% if number != "" %}
+                        Державний реєстраційний номер: {{number}}<br>
+                    {% endif %}
+                    {% if manager != "" %}
+                        Науковий керівник: {{manager}}<br>
+                    {% endif %}
+                    {% if worker != "" %}
+                        Відповідальний виконавець: {{worker}}<br>
+                    {% endif %}
+                    {% if time_range != "" %}
+                        Термін виконання: {{time_range}}
+                    {% endif %}
+                </p>
+            {% endif %}
+        {% endfor %}
+    </div>
+</section>

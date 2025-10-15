@@ -1,0 +1,31 @@
+<h1 class="main__title">
+   {{pagetitle}}
+</h1>
+
+<section>
+    <div class='main__block main__page main-videos'>
+        {% for community in posts %}
+            {% set name = community.name %}
+            {% set url = community.url %}
+            {% set image = function('wp_get_attachment_image_src', community.image, 'rta_thumb_no_cropped_480x')[0] %}
+            {% set link = function('get_translation', '', '/en') ~ '/communities/' ~ community.slug %}
+
+            {% set size = function('getimagesize', image) %}
+            {% set width = size[0] %}
+            {% set height = size[1] %}
+            
+            <div class='video'>
+                <div class="video__image">
+                    <a href='{{link}}'>
+                        <img src='{{theme_dir}}/images/loader.svg' data-src='{{image}}' alt='' {{width == height ? 'style="max-height: 100%;"' : ''}}>
+                    </a>
+                </div>
+                <div class="video__title">
+                    <a href='{{link}}'>
+                        {{name}}
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</section>

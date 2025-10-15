@@ -1,0 +1,17 @@
+{% for book in posts %}
+    {% set name = function('get_translation', book.get_field('name'), book.get_field('name_en')) %}
+    {% set content = function('get_translation', book.get_field('content'), book.get_field('content_en')) %}
+    {% set image = function('wp_get_attachment_image_src', book.image, 'rta_thumb_no_cropped_480x')[0] %}
+    {% set link = function('get_translation', '', '/en') ~ '/books-and-tutorials/' ~ book.slug %}
+
+<h1 class="main__title">
+    {{name}}
+</h1>
+
+<section>
+    <div class="main__block main__page">
+        {{content}}
+    </div>
+</section>
+
+{% endfor %}

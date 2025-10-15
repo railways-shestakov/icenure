@@ -1,0 +1,41 @@
+{% set year = '' %}
+
+{% for patent in posts %}
+    {% set year = patent.year %}
+{% endfor %}
+
+{% set title = function('get_translation', 'Патенти за ' ~ year ~ ' рік', 'News') %}
+
+<h1 class="main__title">
+    {{title}}
+</h1>
+
+<section>
+    <div class='main__block main__page'>
+
+        {% for patent in posts %}
+            {% set text = patent.text %}
+            {% set images = patent.get_field('images') %}
+            
+            <div class='patent'>
+                <div class='patent__name'>
+                    <span>{{loop.index}}.</span> {{text}}
+                </div>
+
+                {% if images|length %}
+                    <div class='patent__images'>
+                        {% for image in images %}
+                            {% set img  = image.image %}
+                            <a href='{{img}}' target='blank'>
+                                <img src='{{theme_dir}}/images/loader.svg' data-src='{{img}}' alt="">
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+            </div>
+
+        {% endfor %}
+
+    </div>
+</section>

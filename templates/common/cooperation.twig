@@ -1,0 +1,95 @@
+<h1 class="main__title icon icon-megaphone" style="margin-top: 0;">
+    <span>
+        {{pagetitle}}
+    </span>
+</h1>
+
+<section style='margin: 0 0 20px;'>
+    <div class='main-videos'>
+        {% for project in cooperation %}
+            {% set name = project.name %}
+            {% set name_en = project.name_en %}
+            {% set url = project.url %}
+            {% set image = function('wp_get_attachment_image_src', project.image, 'rta_thumb_no_cropped_480x')[0] %}
+            {% set link = function('get_translation', '', '/en') ~ '/international-cooperation/' ~ project.post_name %}
+
+            {% set size = function('getimagesize', image) %}
+            {% set width = size[0] %}
+            {% set height = size[1] %}
+            
+            <div class='main__block video' style='margin: 0;'>
+                <div class="video__image">
+                    <a href='{{link}}'>
+                        <img src='{{theme_dir}}/images/loader.svg' data-src='{{image}}' alt='' {{width == height ? 'style="max-height: 100%;"' : ''}}>
+                    </a>
+                </div>
+                <div class="video__title">
+                    <a href='{{link}}' style='color: #2D536F;'>
+                        {{ function('get_translation', name, name_en) }}
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+
+{% if IS_MOBILE == 0 %}
+    {{ function('get_sidebar', 'about') }}
+{% endif %}
+
+
+<h1 class="main__title icon icon-megaphone" style="margin-top: 0;">
+    <span>
+        {{ function('get_translation', 'Міжнародна активність кафедри', 'International activity of the department') }}
+    </span>
+</h1>
+
+<section>
+    
+    <div class='main__news'>
+        <div class="news__block">
+            {% for i, news in posts %}
+
+                {% if i % 2 == 0 %}
+
+                    {% block newsCard %}
+
+                        {% set date = news.get_field('date') %}
+                        {% set title = function('get_translation', news.title_ua, news.title_en) %}
+                        {% set description = function('get_translation', news.description_ua, news.description_en) %}
+                        {% set image = function('wp_get_attachment_image_src', news.image, 'rta_thumb_no_cropped_480x')[0] %}
+                        {% set link = function('get_translation', '', '/en') ~ '/news/' ~ news.slug %}
+
+                        <div class='news-card'>
+                            <div class="news-card__title">
+                                {{title}}
+                                <a class='news-card__link' href='{{link}}'></a>
+                            </div>
+                            <div class="news-card__text">
+                                {{description}}
+
+                                <p class='news-card__date'>
+                                    {{date}}
+                                </p>
+                            </div>
+                            <div class="news-card__image">
+                                <img class='loader' src='{{theme_dir}}/images/loader.svg' data-src='{{image}}'>
+                                <img class='loader news-card__bg' src='//:0' data-src='{{image}}'>
+                            </div>
+                        </div>
+
+                    {% endblock %}
+
+                {% endif %}
+
+            {% endfor %}
+        </div>
+        <div class="news__block">
+            {% for i, news in posts %}
+                {% if i % 2 != 0 %}
+                    {{ block('newsCard') }}
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</section>

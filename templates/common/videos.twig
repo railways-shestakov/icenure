@@ -1,0 +1,27 @@
+<h1 class="main__title{{icon}}">
+   {{title}}
+</h1>
+<section>
+    <div class='main__block main__page main-videos'>
+        {% for page in posts %}
+            {% for video in page.get_field('videos')|reverse %}
+                {% set name  = video.name %}
+                {% set link  = video.link %}
+                {% set image  = video.image %}
+
+                <div class='video'>
+                    <div class="video__image">
+                        <a href='{{link}}' rel='nofollow' target='blank'>
+                            <img src='{{theme_dir}}/images/loader.svg' data-src='{{image}}' alt=''>
+                        </a>
+                    </div>
+                    <div class="video__title">
+                        <a href='{{link}}' rel='nofollow' target='blank'>
+                            {{name}}
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endfor %}
+    </div>
+</section>

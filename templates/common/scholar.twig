@@ -1,0 +1,137 @@
+<h1 class="main__title" style='align-items: center; display: flex;'>
+    {{title}}
+
+    <div style='margin-left: 25px; line-height: 0;'>
+        <a href='https://scholar.google.com.ua/' target='blank' rel='nofollow'>
+            <img src='/wp-content/themes/nure/images/nbm/3.png' style='height: 63px;'>
+        </a>
+    </div>
+</h1>
+
+<section>
+    <div class='main__block main__page'>
+
+        <p>
+            У дужках вказані значення за період {{ function('date', 'Y') - 5 }}-{{ function('date', 'Y') }} рр.<br>
+            Також доступний для ознайомлення рейтинг кафедри у <a href='https://scholar.google.com.ua/citations?hl=uk&view_op=list_works&gmla=AJsN-F5bcR_wgCiBzolCYbykO7TOAQioQTsY28rIaJ8_wZp9DIF0wiJg9MxdHUvdYbv3fkYxquTWqSlnmOee4g2q5HsFKrncRvVzOTeAC5_gxrcCSppVk6kQLUoTsLT3m5-IqDHGgbLHdjxae8tQTtV9AivjwENxPA&user=f65t34wAAAAJ'>Google Scholar</a>.
+        </p>
+
+        <table class='table table--scopus'>
+            <tr>
+                <th>    
+                    Автор
+                </th>
+                <th>
+                    <a href='?sort-by=h-index'>
+                        h-index
+                    </a>
+                </th>
+                <th>
+                    <a href='?sort-by=i10-index'>
+                        i10-index
+                    </a>
+                </th>
+                <th>
+                    <a href='?sort-by=total-citations'>
+                        Загальна кількість цитувань
+                    </a>
+                </th>
+            </tr>
+
+            {% set summ_hindex = 0 %}
+            {% set summ_i10 = 0 %}
+            {% set summ_citations = 0 %}
+
+            {% for teacher in posts %}
+                {% set name = function('get_translation', teacher.get_field('name_ua'), teacher.get_field('name_en')) %}
+                {% set image = function('wp_get_attachment_image_src', teacher.image, 'rta_thumb_no_cropped_480x')[0] %}
+                {% set handle = teacher.get_field('profile')[0].slug %}
+                {% if handle == '' %}
+                    {% set handle = teacher.slug %}
+                {% endif %}
+                {% set link = function('get_translation', '', '/en') ~ '/teaching-staff/' ~ handle %}
+                {% set googleScholarID = teacher.get_field('google_scholar') %}
+
+                {% set hIndex = teacher.get_field('scholar_data')['h-index'] %}
+                {% set i10Index = teacher.get_field('scholar_data')["i10-index"] %}
+                {% set totalCitations = teacher.get_field('scholar_data')['total_citations'] %}
+
+                {% set hIndex_last5 = teacher.get_field('scholar_data')['h-index_last_5'] %}
+                {% set i10Index_last5 = teacher.get_field('scholar_data')["i10-index_last_5"] %}
+                {% set totalCitations_last5 = teacher.get_field('scholar_data')['total_citations_last_5'] %}
+
+                {% if hide_links == 1 and handle == '' %}
+                    {% set link = '#' %}
+                {% endif %}
+
+                {% set summ_hindex = summ_hindex + hIndex %}
+                {% set summ_i10 = summ_i10 + i10Index %}
+                {% set summ_citations = summ_citations + totalCitations %}
+
+                {% if hIndex != "" %}
+                    <tr>
+                        <td>
+                            <div class='table--scopus__author'>
+                                <div class='table--scopus__author-image'>
+                                    <a href='{{link}}'>
+                                        <img src='{{theme_dir}}/images/loader.svg' data-src='{{image}}' alt=''>
+                                    </a>
+                                </div>
+                                <div class='table--scopus__author-data'>
+                                    <a href='{{link}}'>
+                                        {{name|replace({' ': "<br>"})}}
+                                    </a>
+                                    <a href='https://scholar.google.com/citations?user={{googleScholarID}}&hl=en/' target='blank' rel='nofollow'>
+                                        {{googleScholarID}}
+                                    </a>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {{hIndex}} ({{hIndex_last5}})
+                            <div class="mobile">
+                                h-index
+                            </div>
+                        </td>
+                        <td>
+                            {{i10Index}} ({{i10Index_last5}})
+                            <div class="mobile">
+                                i10-index
+                            </div>
+                        </td>
+                        <td>
+                            {{totalCitations}} ({{totalCitations_last5}})
+                            <div class="mobile">
+                                Цитування
+                            </div>
+                        </td>
+                    </tr>
+                {% endif %}
+            {% endfor %}
+
+            <tr>
+                <td>
+                </td>
+                <td>
+                    {{summ_hindex}}
+                    <div class="mobile">
+                        h-index
+                    </div>
+                </td>
+                <td>
+                    {{summ_i10}}
+                    <div class="mobile">
+                        Публікації
+                    </div>
+                </td>
+                <td>
+                    {{summ_citations}}
+                    <div class="mobile">
+                        Цитування
+                    </div>
+                </td>
+            </tr>
+        </table>
+        
+    </div>
+</section>

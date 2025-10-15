@@ -1,0 +1,21 @@
+<h1 class="main__title{{icon}}">
+   {{title}}
+</h1>
+
+<section>
+    <div class='main__block'>
+    {% for list in posts %}
+        {% for i, monograph in list.get_field('monographs') %}
+            {% set text = monograph.text %}
+            {% set url = monograph.url %}
+
+           <div class='textblock'>
+                {{i + 1}}.
+                {% if url %}<a href='{{url}}' rel='nofollow' target='blank'>{% endif %}
+                    {{text}}
+                {% if url %}</a>{% endif %}
+           </div>
+        {% endfor %}
+    {% endfor %}
+    </div>
+</section>

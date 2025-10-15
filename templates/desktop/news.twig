@@ -1,0 +1,165 @@
+{% if slider == true %}
+    {% include 'common/main-slider.twig' %}
+{% endif %}
+
+{% if main_news|length %}
+
+<h2 class="main__title icon icon-megaphone">
+    {{ function('get_translation',
+        "Головна новина",
+        "Main News") }}
+</h2>
+
+<section style="max-width: 100%; padding: 0 5px;">
+    {% for news in main_news %}
+        {% set title = function('get_translation', news.title_ua, news.title_en) %}
+        {% set description = function('get_translation', news.description_ua, news.description_en) %}
+        {% set image = function('wp_get_attachment_image_src', news.image, 'rta_thumb_no_cropped_480x')[0] %}
+        {% set link = function('get_translation', '', '/en') ~ '/news/' ~ news.slug %}
+
+        <div class='news-card news-card--horizontal' style="margin-bottom: 15px;">
+            <div class="news-card__image">
+                <img src='{{image}}'>
+            </div>
+            <div class="news-card__info">
+                <div class="news-card__title">
+                    {{title}}
+                    <a class='news-card__link' href='{{link}}'></a>
+                </div>
+                <div class="news-card__text">
+                    {{description}}
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</section>
+
+{% endif %}
+
+{% if books|length %}
+
+<h1 class="main__title main__title--row">
+    <svg viewBox="0 0 480 480" xmlns="http://www.w3.org/2000/svg"><path d="M240 0H136a8 8 0 00-8 8v56H8a8 8 0 00-8 8v400a8 8 0 008 8h232a8 8 0 008-8V8a8 8 0 00-8-8zm-8 416h-88v-16h88zM16 120h112v240H16zm216-32h-88V64h88zM16 376h112v24H16zm128 8V104h88v280zm88-368v32h-88V16zM128 80v24H16V80zM16 416h112v48H16zm128 48v-32h88v32zm0 0"></path><path d="M479.742 437.984l-96-368a7.99 7.99 0 00-9.805-5.71l-120 32a7.996 7.996 0 00-5.68 9.742l96 368a7.978 7.978 0 009.805 5.695l120-32a7.999 7.999 0 005.68-9.727zM278.496 158.543l104.543-27.871 3.762 14.398-104.535 27.914zm112.344 2.05l46.398 177.981-104.504 27.883-46.398-177.992zm50.472 193.47l8.192 31.394-104.543 27.871-8.16-31.383zM370.29 81.8L379 115.199l-104.543 27.863-8.703-33.382zm-12.578 380.398L349 428.801l104.543-27.88 8.703 33.384zm0 0M104 144H40a8 8 0 00-8 8v64a8 8 0 008 8h64a8 8 0 008-8v-64a8 8 0 00-8-8zm-8 64H48v-48h48zm0 0"></path></svg>
+    
+    {{ function('get_translation',
+        "Підручники та монографії",
+        "Handbooks and monographs") }}
+</h1>
+
+<div class="slider">
+    {% for book in books %}
+        {% set name = function('get_translation', book.get_field('name'), book.get_field('name_en')) %}
+        {% set content = function('get_translation', book.get_field('content'), book.get_field('content_en'))|striptags %}
+        {% set image = function('wp_get_attachment_image_src', book.image, 'rta_thumb_no_cropped_480x')[0] %}
+        {% set link = function('get_translation', '', '/en') ~ '/books-and-tutorials/' ~ book.slug %}
+        {% set shiftX = book.get_field('shift_x') %}
+        {% set isBook = book.isBook %}
+
+        {% if isBook == true %}
+            {% set link = function('get_translation', '', '/en') ~ '/books-and-tutorials/' ~ book.slug %}
+        {% else %}
+            {% set link = function('get_translation', '', '/en') ~ '/monographs/' ~ book.slug %}
+        {% endif %}
+
+        {% if content|length > 350 %}
+            {% set content = content|slice(0, 350) ~ '...' %}
+        {% endif %}
+
+        {% set size = function('getimagesize', image) %}
+        {% set width = size[0] %}
+        {% set height = size[1] %}
+        {% if name != "" and name != nil %}
+        <div class='slider__item'>
+            <div class='slider__image'>
+                <a href='{{link}}' target='blank'>
+                    <img data-lazy='{{image}}' alt="" style="{{width < height ? 'max-height: initial; max-width: 100%;' : ''}}" data-shift-x="{{shiftX ? shiftX : ""}}">
+                </a>
+            </div>
+            <div>
+                <div class='slider__title'>
+                    <a href='{{link}}' target='blank'>
+                        {{name}}
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    {% endfor %}
+</div>
+
+{% endif %}
+
+<h1 class="main__title {% if show_monographs %}main__title--aside{% else %}icon icon-megaphone{% endif %}" style="margin-top: 0;">
+    <span>
+        {{pagetitle}}
+    </span>
+
+    {% if show_monographs %}
+        <div>
+            <a href="/general-list-of-monographs">
+                {{ function('get_translation', 'Загальний перелік монографій', 'General list of monographs') }}
+            </a>
+        </div>
+    {% endif %}
+</h1>
+
+{% if custom_html %}
+    {{ custom_html }}
+{% endif %}
+
+<section>
+    
+    <div class='main__news'>
+        <div class="news__block">
+            {% for i, news in posts %}
+
+                {% if i % 2 == 0 %}
+
+                    {% block newsCard %}
+
+                        {% set date = news.get_field('date') %}
+                        {% set title = function('get_translation', news.title_ua, news.title_en) %}
+                        {% set description = function('get_translation', news.description_ua, news.description_en) %}
+                        {% set image = function('wp_get_attachment_image_src', news.image, 'rta_thumb_no_cropped_480x')[0] %}
+                        {% set link = function('get_translation', '', '/en') ~ '/news/' ~ news.slug %}
+                        {% set url = news.url %}
+                        {% set attr = '' %}
+
+                        {% if url != '' %}
+                            {% set link = url %}
+                            {% set attr = 'rel="nofollow" target="blank"' %}
+                        {% endif %}
+
+                        <div class='news-card'>
+                            <div class="news-card__title">
+                                {{title}}
+                                <a class='news-card__link' href='{{link}}' {{attr}}></a>
+                            </div>
+                            <div class="news-card__text">
+                                {{description}}
+
+                                <p class='news-card__date'>
+                                    {{date}}
+                                </p>
+                            </div>
+                            <div class="news-card__image">
+                                <img class='loader' src='{{theme_dir}}/images/loader.svg' data-src='{{image}}'>
+                                <img class='loader news-card__bg' src='//:0' data-src='{{image}}'>
+                            </div>
+                        </div>
+
+                    {% endblock %}
+
+                {% endif %}
+
+            {% endfor %}
+        </div>
+        <div class="news__block">
+            {% for i, news in posts %}
+                {% if i % 2 != 0 %}
+                    {{ block('newsCard') }}
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</section>

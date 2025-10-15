@@ -1,0 +1,29 @@
+<h1 class="main__title">
+   {{pagetitle}} ({{posts|length}})
+</h1>
+
+<section>
+    <div class='main__block main__page'>
+        {% set i = 0 %}
+        {% set lastYear = 0 %}
+
+        {% for work in posts %}
+            {% set i = i + 1 %}
+            {% set text = work.text %}
+            {% set year = work.year %}
+
+            {% if lastYear != year %}
+                {% set i = 1 %}
+                <div class="title title--h3">
+                    {{year}} рік
+                </div>
+            {% endif %}
+
+            {% set lastYear = year %}
+
+            <p class='textblock'>
+                {{i}}. {{text}}
+            </p>
+        {% endfor %}
+    </div>
+</section>

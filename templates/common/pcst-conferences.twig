@@ -1,0 +1,28 @@
+<section>
+
+    <h2 class="main__title main__title--aside">
+        {{function('get_translation', "Проведення конференцій «Problems of Infocommunications. Science and technology»", "International IEEE Conference «Problems of Infocommunications. Science and technology»")}}
+    </h2>
+
+    <section>
+        {% for picst_conference in posts %}
+            {% set year = picst_conference.get_field('year') %}
+            {% set link = function('get_translation', '/ua', '/en') ~ '/picst-conferences/' ~ picst_conference.slug %}
+            {% set title = function('get_translation', 'Конференція IEEE PICS&T — ' ~ year ~ ' рік', 'PICS&T conference — ' ~ year ~ ' year') %}
+
+            <div class="main__block">
+                <div class="row">
+                    <div>
+                        <div class="row__name" style="margin: 0;">
+                            <a href='{{link}}'>
+                                {{title}}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        {% endfor %}
+    </section>
+
+</section>

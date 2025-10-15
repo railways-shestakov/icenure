@@ -1,0 +1,91 @@
+{% set year = '' %}
+{% set title = '' %}
+
+{% for conference in posts %}
+    {% set year = conference.year %}
+
+    {% if conference.post_type == 'picst_conferences' %}
+        {% set title = function('get_translation', 'PICS&T конференція — ' ~ year ~ ' рік', 'PICS&T conference — ' ~ year ~ ' year') %}
+    {% else %}
+        {% set title = function('get_translation', 'EMC конференція — ' ~ year ~ ' рік', 'EMC conference — ' ~ year ~ ' year') %}
+        
+        {% if year >= 2023 %}
+            {% set title = function('get_translation',
+            'ІКТК конференція — ' ~ year ~ ' рік',
+            'ІКТК conference — ' ~ year ~ ' year') %}
+        {% endif %}
+    {% endif %}
+{% endfor %}
+
+<h1 class="main__title">
+    {{ title }}
+</h1>
+
+<section>
+    <div class='main__block main__page'>
+
+        {% for conference in posts %}
+            {% set content = conference.get_field('content') %}
+
+            {{ content }}
+        {% endfor %}
+
+    </div>
+
+    {% if news_posts|length > 0 %}
+    <h1 class="main__title">
+        {{ function('get_translation', "Новини", "News") }}
+    </h1>
+
+    <section>
+        
+        <div class='main__news'>
+            <div class="news__block">
+                {% for i, news in news_posts %}
+
+                    {% if i % 2 == 0 %}
+
+                        {% block newsCard %}
+
+                            {% set date = news.get_field('date') %}
+                            {% set title = function('get_translation', news.title_ua, news.title_en) %}
+                            {% set description = function('get_translation', news.description_ua, news.description_en) %}
+                            {% set image = function('wp_get_attachment_image_src', news.image, 'rta_thumb_no_cropped_480x')[0] %}
+                            {% set link = function('get_translation', '', '/en') ~ '/news/' ~ news.slug %}
+
+                            <div class='news-card'>
+                                <div class="news-card__title">
+                                    {{title}}
+                                    <a class='news-card__link' href='{{link}}'></a>
+                                </div>
+                                <div class="news-card__text">
+                                    {{description}}
+
+                                    <p class='news-card__date'>
+                                        {{date}}
+                                    </p>
+                                </div>
+                                <div class="news-card__image">
+                                    <img class='loader' src='{{theme_dir}}/images/loader.svg' data-src='{{image}}'>
+                                    <img class='loader news-card__bg' src='//:0' data-src='{{image}}'>
+                                </div>
+                            </div>
+
+                        {% endblock %}
+
+                    {% endif %}
+
+                {% endfor %}
+            </div>
+            <div class="news__block">
+                {% for i, news in news_posts %}
+                    {% if i % 2 != 0 %}
+                        {{ block('newsCard') }}
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+</section>

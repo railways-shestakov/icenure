@@ -1,0 +1,29 @@
+{% for conference in posts %}
+    {% set url = conference.get_field('url') %}
+    {% set text = conference.get_field('text') %}
+    {% set image = conference.get_field('image') %}
+    {% set category = conference.get_field('category') %}
+    {% set shift = conference.get_field('shift') %}
+
+    <div class="sidebar__block conference">
+        <div class="conference__image" {{shift ? 'style="padding: 20px 20px 0;"' : ""}}>
+            {% if url != "" %}
+                <a href='{{url}}' rel='nofollow' target='blank'>
+                    <img src='{{image}}' alt=''> 
+                </a>
+            {% else %}
+                <img src='{{image}}' alt=''> 
+            {% endif %}
+        </div>
+
+        <div class="conference__text">
+            {% if url != "" %}
+                <a href='{{url}}' rel='nofollow' target='blank'>
+                    {{text}}
+                </a>
+            {% else %}
+                {{text}}
+            {% endif %}
+        </div>
+    </div>
+{% endfor %}

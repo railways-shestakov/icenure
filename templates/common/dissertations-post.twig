@@ -1,0 +1,57 @@
+{% set year = '' %}
+
+{% for group in posts %}
+    {% set year = group.year %}
+{% endfor %}
+
+{% set title = function('get_translation', 'Захист за ' ~ year ~ ' рік', 'News') %}
+
+<h1 class="main__title">
+    {{title}}
+</h1>
+
+<section>
+    <div class='main__block main__page'>
+
+        {% for group in posts %}
+            {% set doctorals = group.get_field('doctorals') %}
+            {% set candidates = group.get_field('candidates') %}
+
+            {% if doctorals|length != 0 %}
+                <div class="title">
+                    Захист докторських дисертацій
+                </div>
+            {% endif %}
+
+            {% for doctoral in doctorals %}
+                {% set name = doctoral.name %}
+                {% set text = doctoral.text %}
+                
+                <p class='dissertation'>
+                    <div class='dissertation__name'>
+                        <b>{{loop.index}}. {{name}}</b> {{text}}
+                    </div>
+                </p>
+            {% endfor %}
+
+            {% if candidates|length != 0 %}
+                <div class="title">
+                    Захист кандидатських дисертацій
+                </div>
+            {% endif %}
+
+            {% for candidate in candidates %}
+                {% set name = candidate.name %}
+                {% set text = candidate.text %}
+                
+                <p class='dissertation'>
+                    <div class='dissertation__name'>
+                        <b>{{loop.index}}. {{name}}</b> {{text}}
+                    </div>
+                </p>
+            {% endfor %}
+
+        {% endfor %}
+
+    </div>
+</section>

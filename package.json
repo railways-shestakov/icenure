@@ -1,0 +1,33 @@
+{
+  "name": "nure",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/shestakov-vladyslav/icenure#readme",
+  "bugs": {
+    "url": "https://github.com/shestakov-vladyslav/icenure/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shestakov-vladyslav/icenure.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "gulpfile.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "browser-sync": "^3.0.3",
+    "gulp": "^4.0.2",
+    "gulp-autoprefixer": "^8.0.0",
+    "gulp-sass": "^5.1.0",
+    "gulp-strip-css-comments": "^2.0.0",
+    "gulp-terser": "^2.1.0",
+    "gulp-watch": "^5.0.1",
+    "sass": "^1.51.0"
+  },
+  "devDependencies": {
+    "node-sass": "^9.0.0"
+  }
+}

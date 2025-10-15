@@ -1,0 +1,168 @@
+{% set doct = [] %}
+{% set cand = [] %}
+{% set years = [] %}
+
+{% for disserations in posts %}
+    {% set doctoralsLen = disserations.get_field('doctorals')|length %}
+    {% set candidatesLen = disserations.get_field('candidates')|length %}
+    {% set doct = doct|merge([doctoralsLen]) %}
+    {% set cand = cand|merge([candidatesLen]) %}
+    {% set years = years|merge([disserations.get_field('year')]) %}
+{% endfor %}
+
+{% set doctSum = doct|reduce((carry, v) => carry + v) %}
+{% set candSum = cand|reduce((carry, v) => carry + v) %}
+
+<h1 class="main__title main__title--column">
+   {{title}}
+
+   <div class='main__subtitle'>
+        Усього за останні {{ function('date', 'Y') - 1995 }} років захищено <b>{{ doctSum }} {{function('get_wordform', doctSum, 'докторську дисертацію', 'докторські дисертації', 'докторських дисертацій' )}}</b>
+        та <b>{{ candSum }} {{function('get_wordform', candSum, 'кандидатську або PhD дисертацію', 'кандидатські та PhD дисертації', 'кандидатських та PhD дисертацій' )}}</b>
+   </div>
+</h1>
+
+<section>
+    <div class="main__block main__chart">
+        <canvas id="cursor" width="730px" height="203px"></canvas>
+        <canvas id="dissertationChart" width="100" height="40" ></canvas>
+    </div>
+
+    {% for disserations in posts %}
+        {% set year = disserations.get_field('year') %}
+        {% set doctorals = disserations.get_field('doctorals') %}
+        {% set candidates = disserations.get_field('candidates') %}
+        {% set link = function('get_translation', '/ua', '/en') ~ '/dissertations/' ~ disserations.slug %}
+
+        {% set docLen = doctorals|length %}
+        {% set canLen = candidates|length %}
+
+        <div class="main__block">
+            <div class="row">
+                <div>
+                    <div class="row__name">
+                        <a href='{{link}}'>
+                            Захисти за {{year}} рік
+                        </a>
+                    </div>
+                    <div class="row__content">
+                        {% if year == 2024 %}
+                            У 2024 році захищено 1 дисертацію на здобуття наукового ступеня доктора філософії.
+                        {% else %}
+                            У {{year}} році захищено
+                            {{
+                                docLen
+                                ? docLen ~ " " ~ function('get_wordform', docLen, 'докторську дисертацію', 'докторські дисертації', 'докторських дисертацій')
+                                : ""
+                            }}{{ docLen > 0 and canLen > 0 ? " та " : "" }}{{
+                                canLen
+                                ? canLen ~ " " ~ function('get_wordform', canLen, 'кандидатську або PhD дисертацію', 'Кандидатські та PhD дисертації', 'кандидатських та PhD дисертацій')
+                                : ""
+                            }}.
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    {% endfor %}
+</section>
+
+<script>
+Chart.defaults.global.defaultFontSize = 14;
+Chart.defaults.global.defaultFontColor = '#2F536D';
+Chart.defaults.global.defaultFontFamily = 'Montserrat';
+let ctx = document.getElementById('dissertationChart').getContext('2d');
+window.chart = new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: [{{years|reverse|join(',')}}],
+    datasets: [
+        { 
+            data: [{{doct|reverse|join(',')}}],
+            label: "Докторські дисертації",
+            borderColor: "#3e95cd",
+            pointBackgroundColor: "#3e95cd",
+            pointHoverBackgroundColor: "#3e95cd",
+            backgroundColor: "#3e95cd",
+            pointHoverRadius: 5,
+            fill: false
+        },
+        { 
+            data: [{{cand|reverse|join(',')}}],
+            label: "Кандидатські та PhD дисертаці",
+            borderColor: "#8e5ea2",
+            pointBackgroundColor: "#8e5ea2",
+            pointHoverBackgroundColor: "#8e5ea2",
+            backgroundColor: "#8e5ea2",
+            pointHoverRadius: 5,
+            fill: false
+        }
+    ],
+  },
+  options: {
+    responsive: true,
+    title: {
+      display: true,
+      text: 'Статистика захисту дисертацій за роками',
+      fontSize: 16
+    },
+    tooltips: {
+      mode: 'label',
+      intersect: false
+    },
+    legend: {
+        align: 'start',
+        position: 'bottom',
+        labels: {
+            fontSize: 14,
+            usePointStyle: true,
+            boxWidth: 10,
+        }
+    },
+    scales: {
+        yAxes: [
+            {
+                ticks: {
+                    precision: 0,
+                },
+            },
+        ],
+    }
+  }
+});
+
+{% if dark_mode %}
+    Chart.defaults.global.defaultFontColor = '#ffffff';
+    let yAxes = chart.options.scales.yAxes;
+    let xAxes = chart.options.scales.xAxes;
+
+    for(let key in yAxes){
+        yAxes[key].gridLines.zeroLineColor = 'rgba(255,255,255,.25)';
+        yAxes[key].gridLines.color = 'rgba(255,255,255,.1)';
+    }
+
+    for(let key in xAxes){
+        xAxes[key].gridLines.zeroLineColor = 'rgba(255,255,255,.25)';
+        xAxes[key].gridLines.color = 'rgba(255,255,255,.1)';
+    }
+{% endif %}
+
+$(document).ready(function(){
+    $(document).on("mousemove", function(e) {
+        let element = $("#cursor");
+		let domElement = element[0];
+        let offsetLeft = domElement.getBoundingClientRect().left;
+		let clientX = (e.clientX - offsetLeft);
+		let ctx = domElement.getContext('2d');
+        
+        ctx.clearRect(0, 0, domElement.width, domElement.height);
+        ctx.beginPath();
+        ctx.moveTo(clientX, 0);
+        ctx.lineTo(clientX, domElement.height);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "#E5E5E5";
+        ctx.stroke();
+    });
+});
+</script>

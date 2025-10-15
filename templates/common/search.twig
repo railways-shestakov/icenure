@@ -1,0 +1,13 @@
+{% set search = function('get_translation', 'Введіть пошукову фразу', 'Enter a search phrase') %}
+
+<h1 class="main__title">
+    {{title}}
+</h1>
+
+<section>
+    <div class="main__block search">
+        <input value="{{query}}" type="text" class='input' placeholder='{{search}}'>
+    </div>
+
+    <div class="search__result"></div>
+</section>

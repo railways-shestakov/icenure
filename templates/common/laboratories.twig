@@ -1,0 +1,35 @@
+<h1 class="main__title">
+   {{title}}
+</h1>
+
+<section>
+    {% for book in posts %}
+        {% set name = function('get_translation', book.title_ua, book.title_en) %}
+        {% set content = function('get_translation', book.description_ua, book.description_en) %}
+        {% set image = function('wp_get_attachment_image_src', book.image, 'rta_thumb_no_cropped_480x')[0] %}
+        {% set link = function('get_translation', '', '/en') ~ '/training-laboratories/' ~ book.slug %}
+
+        {% if content|length > 350 %}
+            {% set content = content|slice(0, 350) ~ '...' %}
+        {% endif %}
+
+        <div class="main__block main__block-labs">
+            <div class="row">
+                <div class="row__image">
+                    <img src='{{theme_dir}}/images/loader.svg' data-src='{{image}}' alt="">
+                </div>
+                <div>
+                    <div class="row__name">
+                        <a href='{{link}}'>
+                            {{name}}
+                        </a>
+                    </div>
+                    <div class="row__content">
+                        {{content}}
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    {% endfor %}
+</section>

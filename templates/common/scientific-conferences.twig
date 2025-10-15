@@ -1,0 +1,32 @@
+<section>
+
+    <h2 class="main__title main__title--aside">
+        {{function('get_translation', "Наукові конференції", "Scientific conferences")}}
+    </h2>
+
+    <section class='main__block main__page main-videos'>
+        {% for conference in posts %}
+            {% set name = conference.name %}
+            {% set image = function('wp_get_attachment_image_src', conference.image, 'rta_thumb_no_cropped_480x')[0] %}
+            {% set link = conference.data_link.url %}
+
+            {% set size = function('getimagesize', image) %}
+            {% set width = size[0] %}
+            {% set height = size[1] %}
+            
+            <div class='video'>
+                <div class="video__image">
+                    <a href='{{link}}'>
+                        <img src='{{theme_dir}}/images/loader.svg' data-src='{{image}}' alt='' {{width == height ? 'style="max-height: 100%;"' : ''}}>
+                    </a>
+                </div>
+                <div class="video__title">
+                    <a href='{{link}}'>
+                        {{name}}
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </section>
+
+</section>

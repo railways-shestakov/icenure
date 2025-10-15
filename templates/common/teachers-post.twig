@@ -1,0 +1,1053 @@
+{% set name = '' %}
+{% set name_to_compare = '' %}
+{% set certificates = '' %}
+{% set awards = '' %}
+
+{% set teacher_id = 0 %}
+
+{% for teacher in posts %}
+    {% set teacher_id = teacher.id %}
+{% endfor %}
+
+{% set scopusHindex = [] %}
+{% set scopusTotalPublications = [] %}
+{% set scopusTotalCitations = [] %}
+
+{% set webOfScienceHindex = [] %}
+{% set webOfSciencePublications = [] %}
+{% set webOfScienceCitations = [] %}
+
+{% set scholarHindex = [] %}
+{% set scholarHindex_5 = [] %}
+{% set scholarCitations = [] %}
+{% set scholarCitations_5 = [] %}
+{% set scholari10 = [] %}
+{% set scholari10_5 = [] %}
+
+{% set days = [] %}
+
+{% for base in bases %}
+    {% set staff = base.get_field('staff') %}
+    {% set day = '"' ~ base.title ~ '"' %}
+
+    {% for row in staff %}
+        {% if row.id == teacher_id %}
+            {% set scopus = row.scopus %}
+            {% set webOfScience = row.web_of_science %}
+            {% set scholar = row.scholar %}
+            
+            {% set hindex = scopus.h_index %}
+            {% set total_publications = scopus.total_publications %}
+            {% set total_citations = scopus.total_citations %}
+
+            {% set scopusHindex = scopusHindex|merge([hindex]) %}
+            {% set scopusTotalPublications = scopusTotalPublications|merge([total_publications]) %}
+            {% set scopusTotalCitations = scopusTotalCitations|merge([total_citations]) %}
+
+            {% set hindex = webOfScience['h-index'] %}
+            {% set total_publications = webOfScience.publications %}
+            {% set total_citations = webOfScience.total_citations %}
+
+            {% set webOfScienceHindex = webOfScienceHindex|merge([hindex]) %}
+            {% set webOfSciencePublications = webOfSciencePublications|merge([total_publications]) %}
+            {% set webOfScienceCitations = webOfScienceCitations|merge([total_citations]) %}
+
+            {% set hindex = scholar['h-index'] %}
+            {% set total_citations = scholar.total_citations %}
+            {% set i10 = scholar['i10-index'] %}
+            {% set hindex_5 = scholar['h-index_last_5'] %}
+            {% set total_citations_5 = scholar.total_citations_last_5 %}
+            {% set i10_5 = scholar['i10-index_last_5'] %}
+
+            {% set scholarHindex = scholarHindex|merge([hindex]) %}
+            {% set scholarHindex_5 = scholarHindex_5|merge([hindex_5]) %}
+            {% set scholarCitations = scholarCitations|merge([total_citations]) %}
+            {% set scholarCitations_5 = scholarCitations_5|merge([total_citations_5]) %}
+            {% set scholari10 = scholari10|merge([i10]) %}
+            {% set scholari10_5 = scholari10_5|merge([i10_5]) %}
+        {% endif %}
+    {% endfor %}
+
+    {% if days|length != scopusHindex|length %}
+        {% set days = days|merge([day]) %}
+    {% endif %}
+    
+{% endfor %}
+
+{% for teacher in posts %}
+    {% set name = function('get_translation', teacher.get_field('name_ua'), teacher.get_field('name_en')) %}
+    {% set name_to_compare = teacher.get_field('name_ua') %}
+    {% set content = function('get_translation', teacher.get_field('content_ua'), teacher.get_field('content_en')) %}
+    {% set image = function('wp_get_attachment_image_src', teacher.image, 'rta_thumb_no_cropped_480x')[0] %}
+
+    {% set orcid_id = teacher.get_field('orcid_id') %}
+    {% set researcher_id = teacher.get_field('researcher_id') %}
+    {% set ieee_id = teacher.get_field('ieee_id') %}
+    {% set scopus = teacher.get_field('scopus') %}
+    {% set reseach_gate = teacher.get_field('reseach_gate') %}
+    {% set google_scholar = teacher.get_field('google_scholar') %}
+    {% set dblp = teacher.get_field('dblp_link') %}
+    {% set dblp_data = teacher.get_field('dblp_data') %}
+    {% set dblp_publications = dblp_data["publications"] %}
+    {% set shiftY = teacher.get_field('shift-y') %}
+    {% set ieee_membership_no = teacher.get_field('ieee_membership_no') %}
+    {% set acm_membership_no = teacher.get_field('acm_membership_no') %}
+    {% set email = teacher.get_field('email') %}
+
+    {% set certificates = teacher.get_field('certificates') %}
+    {% set awards = teacher.get_field('awards') %}
+
+    {% set scopus_data = teacher.get_field('scopus_data') %}
+
+    {% set scopus_index = scopus_data["h_index"] %}
+    {% set total_publications = scopus_data["total_publications"] %}
+    {% set total_citations = scopus_data["total_citations"] %}
+
+    {% set scholar_data = teacher.get_field('scholar_data') %}
+
+    {% set scholar_total_citations = scholar_data["total_citations"] %}
+    {% set scholar_total_citations_last_5 = scholar_data["total_citations_last_5"] %}
+    {% set hIndex = scholar_data["h-index"] %}
+    {% set hIndex_last_5 = scholar_data["h-index_last_5"] %}
+    {% set i10Index = scholar_data["i10-index"] %}
+    {% set i10Index_last_5 = scholar_data["i10-index_last_5"] %}
+
+    {% set publons_data = teacher.get_field('publons_data') %}
+
+    {% set publons_publications = publons_data["publications"] %}
+    {% set publons_total_citations = publons_data["total_citations"] %}
+    {% set publons_hIndex = publons_data["h-index"] %}
+    {% set publons_citing_articles = publons_data["citing_articles"] %}
+
+    {% set ieee_data = teacher.get_field('ieee_data') %}
+
+    {% set ieee_publications = ieee_data["publications"] %}
+    {% set ieee_citations = ieee_data["citations"] %}
+
+<h1 class="main__title">
+    {{name}}
+</h1>
+
+<section class='main__teacher'>
+    <div class="main__sidebar">
+        <div class="main__block teacher">
+            <div class="teacher__image">
+                <img src='{{image}}' alt='' style="{{shiftY ? "margin-top:" ~ shiftY ~ "%;" : ""}}">
+            </div>
+            {% if scopus %}
+                <p>
+                    <a href='https://www.scopus.com/authid/detail.uri?authorId={{scopus}}' target='blank' rel='nofollow'>Scopus: {{scopus}}</a><br>
+                    {% if scopus_index or total_publications or total_citations %}
+                        {{ function('get_translation', 'h-індекс', 'h-index') }}: {{scopus_index}}<br>
+                        {{ function('get_translation', 'Документи автора', 'Author\'s documents') }}: {{total_publications}}<br>
+                        {{ function('get_translation', 'Загальна кількість цитувань', 'Total number of citations') }}: {{total_citations}}<br>
+                    {% endif %}
+                </p>
+            {% endif %}
+
+            {% if researcher_id %}
+                <p>
+                    <a href='http://www.researcherid.com/rid/{{researcher_id}}' target='blank' rel='nofollow'>Web of Science: {{researcher_id}}</a><br>
+                    {% if publons_publications %}
+                        h-index: {{publons_hIndex}}
+                        {% if publons_publications %}
+                            <br>{{ function('get_translation', 'Кількість публікацій', 'Publications number') }}: {{publons_publications}}
+                        {% endif %}
+                        {% if publons_total_citations %}
+                            <br>{{ function('get_translation', 'Кількість цитувань', 'Citations number') }}: {{publons_total_citations}}
+                        {% endif %}
+                        {% if publons_citing_articles %}
+                            <br>{{ function('get_translation', 'Процитовано у статтях', 'Citing Articles') }}: {{publons_citing_articles}}<br>
+                        {% endif %}
+                    {% endif %}
+                </p>
+            {% endif %}
+
+            {% if ieee_id %}
+                <p>
+                    <a href='https://ieeexplore.ieee.org/author/{{ieee_id}}' target='blank' rel='nofollow'>IEEE Xplore: {{ieee_id}}</a>
+                    {% if ieee_publications %}
+                        {% if ieee_publications %}
+                            <br>{{ function('get_translation', 'Кількість публікацій', 'Publications number') }}: {{ieee_publications}}
+                        {% endif %}
+                        {% if ieee_citations %}
+                            <br>{{ function('get_translation', 'Кількість цитувань', 'Citations number') }}: {{ieee_citations}}
+                        {% endif %}
+                    {% endif %}
+                </p>
+            {% endif %}
+
+            {% if google_scholar %}
+                <p>
+                    <a href='https://scholar.google.com/citations?user={{google_scholar}}&hl=en/' target='blank' rel='nofollow'>Google Scholar</a><br>
+                    {% if scholar_total_citations %}
+                        {{ function('get_translation', 'Кількість цитувань', 'Citations number') }}: {{scholar_total_citations}} ({{scholar_total_citations_last_5}})<br>
+                        h-index: {{hIndex}} ({{hIndex_last_5}})<br>
+                        i10-index: {{i10Index}} ({{i10Index_last_5}})<br>
+                    {% endif %}
+                </p>
+            {% endif %}
+
+            {% if dblp %}
+                <p>
+                    <a href='{{dblp}}' target='blank' rel='nofollow'>DBLP Profile</a><br>
+                    {% if dblp_publications %}
+                        Number of publications: {{dblp_publications}}<br>
+                    {% endif %}
+                </p>
+            {% endif %}
+
+            {% if reseach_gate or orcid_id or ieee_membership_no or acm_membership_no %}
+                <p>
+                    {% if reseach_gate %}
+                        <a href='https://www.researchgate.net/profile/{{reseach_gate}}' target='blank' rel='nofollow'>ReseachGate</a><br>
+                    {% endif %}
+                    {% if ieee_membership_no %}
+                        IEEE Membership No.: {{ieee_membership_no}}<br>
+                    {% endif %}
+                    {% if acm_membership_no %}
+                        ACM Membership No.: {{acm_membership_no}}<br>
+                    {% endif %}
+                    {% if orcid_id %}
+                        <a href='http://orcid.org/{{orcid_id}}' target='blank' rel='nofollow'>ORCID ID: {{orcid_id}}</a><br>
+                    {% endif %}
+                </p>
+            {% endif %}
+
+            {% if email %}
+                <p>
+                    <b>
+                        {{ function('get_translation', 'Адреса електронної пошти', 'Email address') }}:
+                    </b> <a href='mailto:{{email}}'>{{email}}</a>
+                </p>
+            {% endif %}
+        </div>
+
+        <div class="desktop">
+            <h3>
+                {{ function('get_translation', 'Наукометричні показники<br>співробітників кафедри ІКІ', 'Scientometric indicators<br>employees of department') }}
+            </h3>
+
+            <div class="sidebar__block">
+                <a href="/learning-process/scopus">
+                    <svg viewBox="0 0 128 128"  xmlns="http://www.w3.org/2000/svg"><path d="m42.054 29.348c-1.59-.36-2.2-.6-2.2-1.35 0-.615.569-1.11 1.515-1.11a4.776 4.776 0 0 1 2.939 1.14l1.155-1.59a5.95 5.95 0 0 0 -4.035-1.425c-2.25 0-3.81 1.3-3.81 3.209 0 2 1.545 2.61 3.72 3.1 1.575.36 2.175.585 2.175 1.32 0 .645-.569 1.155-1.68 1.155a5.087 5.087 0 0 1 -3.39-1.35l-1.275 1.515a6.62 6.62 0 0 0 4.575 1.71c2.52 0 4-1.305 4-3.27.002-1.902-1.468-2.558-3.689-3.054z"/><path d="m53.155 27.024a3.208 3.208 0 0 1 2.4 1.155l1.605-1.44a5.488 5.488 0 0 0 -9.479 3.6 5.489 5.489 0 0 0 5.475 5.34 5.576 5.576 0 0 0 4-1.725l-1.605-1.44a3.208 3.208 0 0 1 -2.4 1.155 3.325 3.325 0 0 1 0-6.645z"/><path d="m64.121 25.014a5.334 5.334 0 1 0 5.479 5.325 5.476 5.476 0 0 0 -5.479-5.325zm0 8.654a3.324 3.324 0 1 1 3.21-3.33 3.317 3.317 0 0 1 -3.21 3.33z"/><path d="m80.5 28.674a3.573 3.573 0 0 0 -3.886-3.48h-4.634v10.306h2.205v-3.346h1.635l2.355 3.346h2.52l-2.534-3.6a3.354 3.354 0 0 0 2.339-3.226zm-4.125 1.455h-2.19v-2.91h2.19c1.095 0 1.845.57 1.845 1.455s-.75 1.455-1.845 1.455z"/><path d="m82.9 35.498h7.935v-1.995h-5.714v-2.264h5.174v-1.996h-5.174v-2.054h5.714v-1.995h-7.935z"/><path d="m121.5 13.6h-115a1.75 1.75 0 0 0 -1.75 1.75v97.308a1.75 1.75 0 0 0 1.75 1.742h115a1.75 1.75 0 0 0 1.75-1.75v-97.304a1.75 1.75 0 0 0 -1.75-1.746zm-113.25 3.5h111.5v26.5h-111.5zm0 93.808v-63.808h111.5v63.8z"/><path d="m115.5 49.6h-103a1.75 1.75 0 0 0 -1.75 1.75v55.308a1.75 1.75 0 0 0 1.75 1.75h103a1.75 1.75 0 0 0 1.75-1.75v-55.312a1.75 1.75 0 0 0 -1.75-1.746zm-49 27.65h-12.25v-10.327h12.25zm3.5-10.327h12.25v10.327h-12.25zm-3.5 13.827v10.327h-12.25v-10.327zm3.5 0h12.25v10.327h-12.25zm15.75 0h12.25v10.327h-12.25zm15.75 0h12.25v10.327h-12.25zm0-3.5v-10.327h12.25v10.327zm-3.5 0h-12.25v-10.327h12.25zm-12.25-13.827v-10.323h12.25v10.323zm-3.5 0h-12.25v-10.323h12.25zm-15.75 0h-12.25v-10.323h12.25zm-15.75 0h-26.5v-10.323h26.5zm0 3.5v10.327h-26.5v-10.327zm-30 10.327h-6.5v-10.327h6.5zm-6.5 3.5h6.5v10.327h-6.5zm10 0h26.5v10.327h-26.5zm26.5 13.827v10.323h-26.5v-10.323zm3.5 0h12.25v10.323h-12.25zm15.75 0h12.25v10.323h-12.25zm15.75 0h12.25v10.323h-12.25zm15.75 0h12.25v10.323h-12.25zm12.25-31.154h-12.25v-10.323h12.25zm-93-10.323v10.323h-6.5v-10.323zm-6.5 41.48h6.5v10.32h-6.5z"/></svg>
+                    {{ function('get_translation', 'НМБ Scopus', 'Scopus') }}
+                </a>
+                <a href="/learning-process/google-scholar">
+                    <svg viewBox="0 0 128 128"  xmlns="http://www.w3.org/2000/svg"><path d="m42.054 29.348c-1.59-.36-2.2-.6-2.2-1.35 0-.615.569-1.11 1.515-1.11a4.776 4.776 0 0 1 2.939 1.14l1.155-1.59a5.95 5.95 0 0 0 -4.035-1.425c-2.25 0-3.81 1.3-3.81 3.209 0 2 1.545 2.61 3.72 3.1 1.575.36 2.175.585 2.175 1.32 0 .645-.569 1.155-1.68 1.155a5.087 5.087 0 0 1 -3.39-1.35l-1.275 1.515a6.62 6.62 0 0 0 4.575 1.71c2.52 0 4-1.305 4-3.27.002-1.902-1.468-2.558-3.689-3.054z"/><path d="m53.155 27.024a3.208 3.208 0 0 1 2.4 1.155l1.605-1.44a5.488 5.488 0 0 0 -9.479 3.6 5.489 5.489 0 0 0 5.475 5.34 5.576 5.576 0 0 0 4-1.725l-1.605-1.44a3.208 3.208 0 0 1 -2.4 1.155 3.325 3.325 0 0 1 0-6.645z"/><path d="m64.121 25.014a5.334 5.334 0 1 0 5.479 5.325 5.476 5.476 0 0 0 -5.479-5.325zm0 8.654a3.324 3.324 0 1 1 3.21-3.33 3.317 3.317 0 0 1 -3.21 3.33z"/><path d="m80.5 28.674a3.573 3.573 0 0 0 -3.886-3.48h-4.634v10.306h2.205v-3.346h1.635l2.355 3.346h2.52l-2.534-3.6a3.354 3.354 0 0 0 2.339-3.226zm-4.125 1.455h-2.19v-2.91h2.19c1.095 0 1.845.57 1.845 1.455s-.75 1.455-1.845 1.455z"/><path d="m82.9 35.498h7.935v-1.995h-5.714v-2.264h5.174v-1.996h-5.174v-2.054h5.714v-1.995h-7.935z"/><path d="m121.5 13.6h-115a1.75 1.75 0 0 0 -1.75 1.75v97.308a1.75 1.75 0 0 0 1.75 1.742h115a1.75 1.75 0 0 0 1.75-1.75v-97.304a1.75 1.75 0 0 0 -1.75-1.746zm-113.25 3.5h111.5v26.5h-111.5zm0 93.808v-63.808h111.5v63.8z"/><path d="m115.5 49.6h-103a1.75 1.75 0 0 0 -1.75 1.75v55.308a1.75 1.75 0 0 0 1.75 1.75h103a1.75 1.75 0 0 0 1.75-1.75v-55.312a1.75 1.75 0 0 0 -1.75-1.746zm-49 27.65h-12.25v-10.327h12.25zm3.5-10.327h12.25v10.327h-12.25zm-3.5 13.827v10.327h-12.25v-10.327zm3.5 0h12.25v10.327h-12.25zm15.75 0h12.25v10.327h-12.25zm15.75 0h12.25v10.327h-12.25zm0-3.5v-10.327h12.25v10.327zm-3.5 0h-12.25v-10.327h12.25zm-12.25-13.827v-10.323h12.25v10.323zm-3.5 0h-12.25v-10.323h12.25zm-15.75 0h-12.25v-10.323h12.25zm-15.75 0h-26.5v-10.323h26.5zm0 3.5v10.327h-26.5v-10.327zm-30 10.327h-6.5v-10.327h6.5zm-6.5 3.5h6.5v10.327h-6.5zm10 0h26.5v10.327h-26.5zm26.5 13.827v10.323h-26.5v-10.323zm3.5 0h12.25v10.323h-12.25zm15.75 0h12.25v10.323h-12.25zm15.75 0h12.25v10.323h-12.25zm15.75 0h12.25v10.323h-12.25zm12.25-31.154h-12.25v-10.323h12.25zm-93-10.323v10.323h-6.5v-10.323zm-6.5 41.48h6.5v10.32h-6.5z"/></svg>
+                    {{ function('get_translation', 'НМБ Google Scholar', 'Google Scholar') }}
+                </a>
+                <a href="/learning-process/web-of-science">
+                    <svg viewBox="0 0 128 128"  xmlns="http://www.w3.org/2000/svg"><path d="m42.054 29.348c-1.59-.36-2.2-.6-2.2-1.35 0-.615.569-1.11 1.515-1.11a4.776 4.776 0 0 1 2.939 1.14l1.155-1.59a5.95 5.95 0 0 0 -4.035-1.425c-2.25 0-3.81 1.3-3.81 3.209 0 2 1.545 2.61 3.72 3.1 1.575.36 2.175.585 2.175 1.32 0 .645-.569 1.155-1.68 1.155a5.087 5.087 0 0 1 -3.39-1.35l-1.275 1.515a6.62 6.62 0 0 0 4.575 1.71c2.52 0 4-1.305 4-3.27.002-1.902-1.468-2.558-3.689-3.054z"/><path d="m53.155 27.024a3.208 3.208 0 0 1 2.4 1.155l1.605-1.44a5.488 5.488 0 0 0 -9.479 3.6 5.489 5.489 0 0 0 5.475 5.34 5.576 5.576 0 0 0 4-1.725l-1.605-1.44a3.208 3.208 0 0 1 -2.4 1.155 3.325 3.325 0 0 1 0-6.645z"/><path d="m64.121 25.014a5.334 5.334 0 1 0 5.479 5.325 5.476 5.476 0 0 0 -5.479-5.325zm0 8.654a3.324 3.324 0 1 1 3.21-3.33 3.317 3.317 0 0 1 -3.21 3.33z"/><path d="m80.5 28.674a3.573 3.573 0 0 0 -3.886-3.48h-4.634v10.306h2.205v-3.346h1.635l2.355 3.346h2.52l-2.534-3.6a3.354 3.354 0 0 0 2.339-3.226zm-4.125 1.455h-2.19v-2.91h2.19c1.095 0 1.845.57 1.845 1.455s-.75 1.455-1.845 1.455z"/><path d="m82.9 35.498h7.935v-1.995h-5.714v-2.264h5.174v-1.996h-5.174v-2.054h5.714v-1.995h-7.935z"/><path d="m121.5 13.6h-115a1.75 1.75 0 0 0 -1.75 1.75v97.308a1.75 1.75 0 0 0 1.75 1.742h115a1.75 1.75 0 0 0 1.75-1.75v-97.304a1.75 1.75 0 0 0 -1.75-1.746zm-113.25 3.5h111.5v26.5h-111.5zm0 93.808v-63.808h111.5v63.8z"/><path d="m115.5 49.6h-103a1.75 1.75 0 0 0 -1.75 1.75v55.308a1.75 1.75 0 0 0 1.75 1.75h103a1.75 1.75 0 0 0 1.75-1.75v-55.312a1.75 1.75 0 0 0 -1.75-1.746zm-49 27.65h-12.25v-10.327h12.25zm3.5-10.327h12.25v10.327h-12.25zm-3.5 13.827v10.327h-12.25v-10.327zm3.5 0h12.25v10.327h-12.25zm15.75 0h12.25v10.327h-12.25zm15.75 0h12.25v10.327h-12.25zm0-3.5v-10.327h12.25v10.327zm-3.5 0h-12.25v-10.327h12.25zm-12.25-13.827v-10.323h12.25v10.323zm-3.5 0h-12.25v-10.323h12.25zm-15.75 0h-12.25v-10.323h12.25zm-15.75 0h-26.5v-10.323h26.5zm0 3.5v10.327h-26.5v-10.327zm-30 10.327h-6.5v-10.327h6.5zm-6.5 3.5h6.5v10.327h-6.5zm10 0h26.5v10.327h-26.5zm26.5 13.827v10.323h-26.5v-10.323zm3.5 0h12.25v10.323h-12.25zm15.75 0h12.25v10.323h-12.25zm15.75 0h12.25v10.323h-12.25zm15.75 0h12.25v10.323h-12.25zm12.25-31.154h-12.25v-10.323h12.25zm-93-10.323v10.323h-6.5v-10.323zm-6.5 41.48h6.5v10.32h-6.5z"/></svg>
+                    {{ function('get_translation', 'НМБ Web of Science', 'Web of Science') }}
+                </a>
+            </div>
+
+            <h3>
+                {{ function('get_translation', 'Наукометричні показники<br> співробітників ХНУРЕ', 'Scientometric indicators<br>employees of NURE') }}
+            </h3>
+
+            <div class="sidebar__block">
+                <a href="/learning-process/scopus-nure">
+                    <svg viewBox="0 0 128 128"  xmlns="http://www.w3.org/2000/svg"><path d="m42.054 29.348c-1.59-.36-2.2-.6-2.2-1.35 0-.615.569-1.11 1.515-1.11a4.776 4.776 0 0 1 2.939 1.14l1.155-1.59a5.95 5.95 0 0 0 -4.035-1.425c-2.25 0-3.81 1.3-3.81 3.209 0 2 1.545 2.61 3.72 3.1 1.575.36 2.175.585 2.175 1.32 0 .645-.569 1.155-1.68 1.155a5.087 5.087 0 0 1 -3.39-1.35l-1.275 1.515a6.62 6.62 0 0 0 4.575 1.71c2.52 0 4-1.305 4-3.27.002-1.902-1.468-2.558-3.689-3.054z"/><path d="m53.155 27.024a3.208 3.208 0 0 1 2.4 1.155l1.605-1.44a5.488 5.488 0 0 0 -9.479 3.6 5.489 5.489 0 0 0 5.475 5.34 5.576 5.576 0 0 0 4-1.725l-1.605-1.44a3.208 3.208 0 0 1 -2.4 1.155 3.325 3.325 0 0 1 0-6.645z"/><path d="m64.121 25.014a5.334 5.334 0 1 0 5.479 5.325 5.476 5.476 0 0 0 -5.479-5.325zm0 8.654a3.324 3.324 0 1 1 3.21-3.33 3.317 3.317 0 0 1 -3.21 3.33z"/><path d="m80.5 28.674a3.573 3.573 0 0 0 -3.886-3.48h-4.634v10.306h2.205v-3.346h1.635l2.355 3.346h2.52l-2.534-3.6a3.354 3.354 0 0 0 2.339-3.226zm-4.125 1.455h-2.19v-2.91h2.19c1.095 0 1.845.57 1.845 1.455s-.75 1.455-1.845 1.455z"/><path d="m82.9 35.498h7.935v-1.995h-5.714v-2.264h5.174v-1.996h-5.174v-2.054h5.714v-1.995h-7.935z"/><path d="m121.5 13.6h-115a1.75 1.75 0 0 0 -1.75 1.75v97.308a1.75 1.75 0 0 0 1.75 1.742h115a1.75 1.75 0 0 0 1.75-1.75v-97.304a1.75 1.75 0 0 0 -1.75-1.746zm-113.25 3.5h111.5v26.5h-111.5zm0 93.808v-63.808h111.5v63.8z"/><path d="m115.5 49.6h-103a1.75 1.75 0 0 0 -1.75 1.75v55.308a1.75 1.75 0 0 0 1.75 1.75h103a1.75 1.75 0 0 0 1.75-1.75v-55.312a1.75 1.75 0 0 0 -1.75-1.746zm-49 27.65h-12.25v-10.327h12.25zm3.5-10.327h12.25v10.327h-12.25zm-3.5 13.827v10.327h-12.25v-10.327zm3.5 0h12.25v10.327h-12.25zm15.75 0h12.25v10.327h-12.25zm15.75 0h12.25v10.327h-12.25zm0-3.5v-10.327h12.25v10.327zm-3.5 0h-12.25v-10.327h12.25zm-12.25-13.827v-10.323h12.25v10.323zm-3.5 0h-12.25v-10.323h12.25zm-15.75 0h-12.25v-10.323h12.25zm-15.75 0h-26.5v-10.323h26.5zm0 3.5v10.327h-26.5v-10.327zm-30 10.327h-6.5v-10.327h6.5zm-6.5 3.5h6.5v10.327h-6.5zm10 0h26.5v10.327h-26.5zm26.5 13.827v10.323h-26.5v-10.323zm3.5 0h12.25v10.323h-12.25zm15.75 0h12.25v10.323h-12.25zm15.75 0h12.25v10.323h-12.25zm15.75 0h12.25v10.323h-12.25zm12.25-31.154h-12.25v-10.323h12.25zm-93-10.323v10.323h-6.5v-10.323zm-6.5 41.48h6.5v10.32h-6.5z"/></svg>
+                    {{ function('get_translation', 'НМБ Scopus', 'Scopus') }}
+                </a>
+                <a href="/learning-process/google-scholar-nure">
+                    <svg viewBox="0 0 128 128"  xmlns="http://www.w3.org/2000/svg"><path d="m42.054 29.348c-1.59-.36-2.2-.6-2.2-1.35 0-.615.569-1.11 1.515-1.11a4.776 4.776 0 0 1 2.939 1.14l1.155-1.59a5.95 5.95 0 0 0 -4.035-1.425c-2.25 0-3.81 1.3-3.81 3.209 0 2 1.545 2.61 3.72 3.1 1.575.36 2.175.585 2.175 1.32 0 .645-.569 1.155-1.68 1.155a5.087 5.087 0 0 1 -3.39-1.35l-1.275 1.515a6.62 6.62 0 0 0 4.575 1.71c2.52 0 4-1.305 4-3.27.002-1.902-1.468-2.558-3.689-3.054z"/><path d="m53.155 27.024a3.208 3.208 0 0 1 2.4 1.155l1.605-1.44a5.488 5.488 0 0 0 -9.479 3.6 5.489 5.489 0 0 0 5.475 5.34 5.576 5.576 0 0 0 4-1.725l-1.605-1.44a3.208 3.208 0 0 1 -2.4 1.155 3.325 3.325 0 0 1 0-6.645z"/><path d="m64.121 25.014a5.334 5.334 0 1 0 5.479 5.325 5.476 5.476 0 0 0 -5.479-5.325zm0 8.654a3.324 3.324 0 1 1 3.21-3.33 3.317 3.317 0 0 1 -3.21 3.33z"/><path d="m80.5 28.674a3.573 3.573 0 0 0 -3.886-3.48h-4.634v10.306h2.205v-3.346h1.635l2.355 3.346h2.52l-2.534-3.6a3.354 3.354 0 0 0 2.339-3.226zm-4.125 1.455h-2.19v-2.91h2.19c1.095 0 1.845.57 1.845 1.455s-.75 1.455-1.845 1.455z"/><path d="m82.9 35.498h7.935v-1.995h-5.714v-2.264h5.174v-1.996h-5.174v-2.054h5.714v-1.995h-7.935z"/><path d="m121.5 13.6h-115a1.75 1.75 0 0 0 -1.75 1.75v97.308a1.75 1.75 0 0 0 1.75 1.742h115a1.75 1.75 0 0 0 1.75-1.75v-97.304a1.75 1.75 0 0 0 -1.75-1.746zm-113.25 3.5h111.5v26.5h-111.5zm0 93.808v-63.808h111.5v63.8z"/><path d="m115.5 49.6h-103a1.75 1.75 0 0 0 -1.75 1.75v55.308a1.75 1.75 0 0 0 1.75 1.75h103a1.75 1.75 0 0 0 1.75-1.75v-55.312a1.75 1.75 0 0 0 -1.75-1.746zm-49 27.65h-12.25v-10.327h12.25zm3.5-10.327h12.25v10.327h-12.25zm-3.5 13.827v10.327h-12.25v-10.327zm3.5 0h12.25v10.327h-12.25zm15.75 0h12.25v10.327h-12.25zm15.75 0h12.25v10.327h-12.25zm0-3.5v-10.327h12.25v10.327zm-3.5 0h-12.25v-10.327h12.25zm-12.25-13.827v-10.323h12.25v10.323zm-3.5 0h-12.25v-10.323h12.25zm-15.75 0h-12.25v-10.323h12.25zm-15.75 0h-26.5v-10.323h26.5zm0 3.5v10.327h-26.5v-10.327zm-30 10.327h-6.5v-10.327h6.5zm-6.5 3.5h6.5v10.327h-6.5zm10 0h26.5v10.327h-26.5zm26.5 13.827v10.323h-26.5v-10.323zm3.5 0h12.25v10.323h-12.25zm15.75 0h12.25v10.323h-12.25zm15.75 0h12.25v10.323h-12.25zm15.75 0h12.25v10.323h-12.25zm12.25-31.154h-12.25v-10.323h12.25zm-93-10.323v10.323h-6.5v-10.323zm-6.5 41.48h6.5v10.32h-6.5z"/></svg>
+                    {{ function('get_translation', 'НМБ Google Scholar', 'Google Scholar') }}
+                </a>
+                <a href="/learning-process/web-of-science-nure">
+                    <svg viewBox="0 0 128 128"  xmlns="http://www.w3.org/2000/svg"><path d="m42.054 29.348c-1.59-.36-2.2-.6-2.2-1.35 0-.615.569-1.11 1.515-1.11a4.776 4.776 0 0 1 2.939 1.14l1.155-1.59a5.95 5.95 0 0 0 -4.035-1.425c-2.25 0-3.81 1.3-3.81 3.209 0 2 1.545 2.61 3.72 3.1 1.575.36 2.175.585 2.175 1.32 0 .645-.569 1.155-1.68 1.155a5.087 5.087 0 0 1 -3.39-1.35l-1.275 1.515a6.62 6.62 0 0 0 4.575 1.71c2.52 0 4-1.305 4-3.27.002-1.902-1.468-2.558-3.689-3.054z"/><path d="m53.155 27.024a3.208 3.208 0 0 1 2.4 1.155l1.605-1.44a5.488 5.488 0 0 0 -9.479 3.6 5.489 5.489 0 0 0 5.475 5.34 5.576 5.576 0 0 0 4-1.725l-1.605-1.44a3.208 3.208 0 0 1 -2.4 1.155 3.325 3.325 0 0 1 0-6.645z"/><path d="m64.121 25.014a5.334 5.334 0 1 0 5.479 5.325 5.476 5.476 0 0 0 -5.479-5.325zm0 8.654a3.324 3.324 0 1 1 3.21-3.33 3.317 3.317 0 0 1 -3.21 3.33z"/><path d="m80.5 28.674a3.573 3.573 0 0 0 -3.886-3.48h-4.634v10.306h2.205v-3.346h1.635l2.355 3.346h2.52l-2.534-3.6a3.354 3.354 0 0 0 2.339-3.226zm-4.125 1.455h-2.19v-2.91h2.19c1.095 0 1.845.57 1.845 1.455s-.75 1.455-1.845 1.455z"/><path d="m82.9 35.498h7.935v-1.995h-5.714v-2.264h5.174v-1.996h-5.174v-2.054h5.714v-1.995h-7.935z"/><path d="m121.5 13.6h-115a1.75 1.75 0 0 0 -1.75 1.75v97.308a1.75 1.75 0 0 0 1.75 1.742h115a1.75 1.75 0 0 0 1.75-1.75v-97.304a1.75 1.75 0 0 0 -1.75-1.746zm-113.25 3.5h111.5v26.5h-111.5zm0 93.808v-63.808h111.5v63.8z"/><path d="m115.5 49.6h-103a1.75 1.75 0 0 0 -1.75 1.75v55.308a1.75 1.75 0 0 0 1.75 1.75h103a1.75 1.75 0 0 0 1.75-1.75v-55.312a1.75 1.75 0 0 0 -1.75-1.746zm-49 27.65h-12.25v-10.327h12.25zm3.5-10.327h12.25v10.327h-12.25zm-3.5 13.827v10.327h-12.25v-10.327zm3.5 0h12.25v10.327h-12.25zm15.75 0h12.25v10.327h-12.25zm15.75 0h12.25v10.327h-12.25zm0-3.5v-10.327h12.25v10.327zm-3.5 0h-12.25v-10.327h12.25zm-12.25-13.827v-10.323h12.25v10.323zm-3.5 0h-12.25v-10.323h12.25zm-15.75 0h-12.25v-10.323h12.25zm-15.75 0h-26.5v-10.323h26.5zm0 3.5v10.327h-26.5v-10.327zm-30 10.327h-6.5v-10.327h6.5zm-6.5 3.5h6.5v10.327h-6.5zm10 0h26.5v10.327h-26.5zm26.5 13.827v10.323h-26.5v-10.323zm3.5 0h12.25v10.323h-12.25zm15.75 0h12.25v10.323h-12.25zm15.75 0h12.25v10.323h-12.25zm15.75 0h12.25v10.323h-12.25zm12.25-31.154h-12.25v-10.323h12.25zm-93-10.323v10.323h-6.5v-10.323zm-6.5 41.48h6.5v10.32h-6.5z"/></svg>
+                    {{ function('get_translation', 'НМБ Web of Science', 'Web of Science') }}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="main__block main__page">
+        {{content}}
+    </div>
+</section>
+
+{% endfor %}
+
+{% set reportsHTML = '' %}
+{% set articlesHTML = '' %}
+
+{% set i = 1 %}
+{% set j = 1 %}
+{% set k = 0 %}
+{% set z = 0 %}
+{% set n = 0 %}
+
+{% set art = [] %}
+{% set rep = [] %}
+{% set met = [] %}
+{% set bookarr = [] %}
+{% set monoarr = [] %}
+{% set certarr = [] %}
+{% set awardarr = [] %}
+{% set patarr = [] %}
+{% set artCount = 0 %}
+{% set repCount = 0 %}
+
+{% for publication in publications %}
+    {% set authors = publication.get_field('authors') %}
+    {% set rel = publication.get_field("authors-relationship") %}
+    {% set text = publication.get_field('text') %}
+    {% set wos = publication.get_field('wos') %}
+    {% set scopus = publication.get_field('scopus') %}
+    {% set doi = publication.get_field('doi') %}
+    {% set quartile = publication.get_field('quartile') %}
+    {% set type = publication.get_field('type') %}
+    {% set show = 0 %}
+    {% set year = publication.get_field('year') %}
+    {% set nextyear = publications[loop.index0 + 1].get_field('year') %}
+
+    {% if type == 'Стаття' %}
+        {% set artCount = artCount + 1 %}
+    {% else %}
+        {% set repCount = repCount + 1 %}
+    {% endif %}
+
+    {% if year != nextyear %}
+        {% set name = 'y' ~ year %}
+        {% set art = art|merge({ (name): (artCount)}) %}
+        {% set rep = rep|merge({ (name): (repCount)}) %}
+        {% set artCount = 0 %}
+        {% set repCount = 0 %}
+    {% endif %}
+
+    {% for relation in rel %}
+        {% if relation == teacher_id or relation.name == name_to_compare %}
+            {% set show = 1 %}
+        {% endif %}
+    {% endfor %}
+
+    {% if show == 1 %}
+
+        {% if type == 'Стаття' %}
+            {% set articlesHTML %}
+                {{articlesHTML}}
+
+                <div class='publication'>
+                    <div class='publication--authors'>
+                        {{i}}. {{authors}}
+                        {% if scopus != false %}
+                            <div class='tag tag--blue'>
+                                Scopus
+                            </div>
+                        {% endif %}
+                        {% if wos != false %}
+                            <div class='tag tag--blue'>
+                                WoS
+                            </div>
+                        {% endif %}
+                        {% if quartile != '' %}
+                            <div class='tag tag--green'>
+                                {{quartile}}
+                            </div>
+                        {% endif %}
+                        {% if doi != '' %}
+                            <div class='tag tag--brown'>
+                                DOI
+                                <a href='{{doi}}' target='blank' rel='nofollow'></a>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class='publication--text'>
+                        {{text}}
+                    </div>
+
+                </div>
+            {% endset %}
+            {% set i = i + 1 %}
+        {% else %}
+            {% set reportsHTML %}
+                {{reportsHTML}}
+        
+                <div class='publication'>
+                    <div class='publication--authors'>
+                        {{j}}. {{authors}}
+                        {% if scopus != false %}
+                            <div class='tag tag--blue'>
+                                Scopus
+                            </div>
+                        {% endif %}
+                        {% if wos != false %}
+                            <div class='tag tag--blue'>
+                                WoS
+                            </div>
+                        {% endif %}
+                        {% if quartile != '' %}
+                            <div class='tag tag--green'>
+                                {{quartile}}
+                            </div>
+                        {% endif %}
+                        {% if doi != '' %}
+                            <div class='tag tag--brown'>
+                                DOI
+                                <a href='{{doi}}' target='blank' rel='nofollow'></a>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class='publication--text'>
+                        {{text}}
+                    </div>
+                    
+                </div>
+            {% endset %}
+            {% set j = j + 1 %}
+        {% endif %}
+
+    {% endif %}
+
+{% endfor %}
+
+{% set i = i - 1 %}
+{% set j = j - 1 %}
+
+<section class='section'>
+    {% if books|length %}
+        <div class="title title--collapsing js-collapse title--aside">
+            <div class="title__text">
+                {{ function('get_translation', 'Підручники', 'Books') }} ({{books|length}})
+            </div>
+
+            <div class='title__aside'>
+                <a href="/learning-process/books-and-tutorials/">
+                    {{ function('get_translation', 'Підручники та навчальні посібники', 'Books and manuals') }}
+                </a>
+            </div>
+        </div>
+
+        <section class='collapsed'>
+            {% for book in books %}
+                {% set title = function('get_translation', book.get_field('name'), book.get_field('name_en')) %}
+                {% set content = function('get_translation', book.get_field('content'), book.get_field('content_en'))|striptags %}
+                {% set image = function('wp_get_attachment_image_src', book.image, 'rta_thumb_no_cropped_480x')[0] %}
+                {% set link = function('get_translation', '', '/en') ~ '/books-and-tutorials/' ~ book.slug %}
+                {% set shiftX = book.get_field('shift_x') %}
+
+                {% if content|length > 350 %}
+                    {% set content = content|slice(0, 350) ~ '...' %}
+                {% endif %}
+
+                {% set year = book.get_field('year') %}
+
+                {% if bookarr['y'~year] %}
+                    {% set bookCount = bookarr['y'~year] %}
+                {% else %}
+                    {% set bookCount = 0 %}
+                {% endif %}
+
+                {% set bookCount = bookCount + 1 %}
+
+                {% set name = 'y' ~ year %}
+                {% set bookarr = bookarr|merge({ (name): (bookCount)}) %}
+
+                {% set size = function('getimagesize', image) %}
+                {% set width = size[0] %}
+                {% set height = size[1] %}
+
+                <div class="main__block main__block--books">
+                    <div class="row">
+                        <div class="row__image">
+                            <img src='{{theme_dir}}/images/loader.svg' data-src='{{image}}' alt="" style="{{width < height ? 'max-height: initial; max-width: 100%;' : ''}}" data-shift-x="{{shiftX ? shiftX : ""}}">
+                        </div>
+                        <div>
+                            <div class="row__name">
+                                <a href='{{link}}'>
+                                    {{title}}
+                                </a>
+                            </div>
+                            <div class="row__content">
+                                {{content}}
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            {% endfor %}
+        </section>
+    {% endif %}
+
+    {% if monographs|length %}
+
+        {% set monographsHTML = '' %}
+
+        {% for monograph in monographs %}
+            {% set text = monograph.text %}
+            {% set url = monograph.url %}
+            {% set rel = monograph["authors-relationship"] %}
+            {% set show = 0 %}    
+
+            {% for relation in rel %}
+                {% if relation.post_title == name_to_compare %}
+                    {% set show = 1 %}
+                {% endif %}
+            {% endfor %}
+
+            {% if show == 1 %}
+                {% set k = k + 1 %}
+                {% set monographsHTML %}
+                    {{monographsHTML}}
+
+                    <div class='textblock'>
+                        {{k}}.
+                        {% if url %}<a href='{{url}}' rel='nofollow' target='blank'>{% endif %}
+                            {{text}}
+                        {% if url %}</a>{% endif %}
+                    </div>
+                {% endset %}
+
+                {% set year = monograph['year'] %}
+
+                {% if monoarr['y'~year] %}
+                    {% set monoCount = monoarr['y'~year] %}
+                {% else %}
+                    {% set monoCount = 0 %}
+                {% endif %}
+
+                {% set monoCount = monoCount + 1 %}
+
+                {% set name = 'y' ~ year %}
+                {% set monoarr = monoarr|merge({ (name): (monoCount)}) %}
+            {% endif %}
+        {% endfor %}
+        
+    {% endif %}
+
+    {% if patents|length %}
+
+        {% set patentsHTML = '' %}
+
+        {% for patent in patents %}
+            {% set year = patent.get_field('year') %}
+            {% set url = function('get_translation', '/ua', '/en') ~ '/patents/' ~ patent.year %}
+            {% set text = patent.text|striptags('<br>') %}
+
+            {% if patarr['y'~year] %}
+                {% set patCount = patarr['y'~year] %}
+            {% else %}
+                {% set patCount = 0 %}
+            {% endif %}
+
+            {% set patCount = patCount + 1 %}
+
+            {% set name = 'y' ~ year %}
+            {% set patarr = patarr|merge({ (name): (patCount)}) %}
+
+            {% set z = z + 1 %}
+            {% set patentsHTML %}
+                {{patentsHTML}}
+            
+                <div class='textblock'>
+                    <span>{{z}}.</span> <a href='{{url}}'>{{text}}</a>
+                </div>
+            {% endset %}
+
+        {% endfor %}
+
+    {% endif %}
+
+    {% if research|length %}
+
+        {% set researchHTML = '' %}
+
+        {% for work in research %}
+            {% set shifr = work.shifr %}
+            {% set number = work.number %}
+            {% set name = work.name %}
+            {% set manager = work.manager %}
+            {% set worker = work.worker %}
+            {% set time_range = work.time_range %}
+            {% set category = work.category %}
+            {% set rel = work["authors-relationship"] %}
+            {% set show = 0 %}    
+
+            {% for relation in rel %}
+                {% if relation.post_title == name_to_compare %}
+                    {% set show = 1 %}
+                {% endif %}
+            {% endfor %}
+
+            {% if show == 1 %}
+                {% set n = n + 1 %}
+                {% set researchHTML %}
+                    {{researchHTML}}
+
+                    <div class='textblock research'>
+                        <div class='research__title'> {{name}}</div>
+                        {% if shifr != "" %}
+                            {{ function('get_translation', 'Шифр НДР', 'GDR code') }}: {{shifr}}<br>
+                        {% endif %}
+                        {% if number != "" %}
+                            {{ function('get_translation', 'Державний реєстраційний номер', 'State registration number') }}: {{number}}<br>
+                        {% endif %}
+                        {% if manager != "" %}
+                            {{ function('get_translation', 'Науковий керівник', 'Supervisor') }}: {{manager}}<br>
+                        {% endif %}
+                        {% if worker != "" %}
+                            {{ function('get_translation', 'Відповідальний виконавець', 'Responsible executor') }}: {{worker}}<br>
+                        {% endif %}
+                        {% if time_range != "" %}
+                            {{ function('get_translation', 'Термін виконання', 'Deadline') }}: {{time_range}}
+                        {% endif %}
+                    </div>
+                {% endset %}
+            {% endif %}
+
+        {% endfor %}
+
+    {% endif %}
+
+    {% set methodicalHTML = '' %}
+    {% set metCount = 0 %}
+
+    {% if methodical_works|length %}
+        {% set l = 0 %}
+        {% set lastYear = 0 %}
+
+        {% for work in methodical_works %}
+            {% set l = l + 1 %}
+            {% set text = work.text %}
+            {% set year = work.year %}
+            {% set metCount = metCount + 1 %}
+
+            {% set methodicalHTML %}
+                {{methodicalHTML}}
+
+                {% if lastYear != year %}
+                    {% set l = 1 %}
+                    <div class="title title--h3">
+                        {{year}} {{ function('get_translation', 'рік', 'year') }}
+                    </div>
+
+                    {% set name = 'y' ~ year %}
+                    {% set met = met|merge({ (name): (metCount)}) %}
+                    {% set metCount = 0 %}
+                {% endif %}
+
+                {% set lastYear = year %}
+
+                <p class='textblock'>
+                    {{l}}. {{text}}
+                </p>
+            {% endset %}
+        {% endfor %}
+    {% endif %}
+    
+    {% if k %}
+
+        <div class="title title--collapsing js-collapse title--aside">
+            <div class="title__text">
+                {{ function('get_translation', 'Монографії', 'Monographs') }} ({{k}})
+            </div>
+
+            <div class='title__aside'>
+                <a href="/general-list-of-monographs">
+                    {{ function('get_translation', 'Загальний перелік монографій', 'General list of monographs') }}
+                </a>
+            </div>
+        </div>
+
+        <div class='main__block main__page collapsed'>
+
+            {{monographsHTML}}
+        
+        </div>
+    {% endif %}
+
+    {% if i %}
+        <div class="title title--collapsing js-collapse title--aside">
+            <div class="title__text">
+                {{ function('get_translation', 'Статті з 2008 року', 'Articles from 2008') }} ({{i}}) 
+            </div>
+
+            <div class='title__aside'>
+                <a href="/scientific-work/publications/">
+                    {{ function('get_translation', 'Публікації та доповіді', 'Publications and reports') }}
+                </a>
+            </div>
+        </div>
+
+        <div class='main__block main__page collapsed'>
+
+            {{articlesHTML}}
+            
+        </div>
+    {% endif %}
+
+    {% if j %}
+
+    <div class="title title--collapsing js-collapse title--aside">
+        <div class="title__text">
+            {{ function('get_translation', 'Доповіді з 2008 року', 'Reports from 2008') }} ({{j}})
+        </div>
+
+        <div class='title__aside'>
+            <a href="/scientific-work/publications/">
+                {{ function('get_translation', 'Публікації та доповіді', 'Publications and reports') }}
+            </a>
+        </div>
+    </div>
+
+    <div class='main__block main__page collapsed'>
+
+        {{reportsHTML}}
+    
+    </div>
+
+    {% endif %}
+
+    {% if z %}
+        <div class="title title--collapsing js-collapse title--aside">
+            <div class="title__text">
+                {{ function('get_translation', 'Патенти', 'Patents') }} ({{z}})
+            </div>
+
+            <div class='title__aside'>
+                <a href="/scientific-work/patents">
+                    {{ function('get_translation', 'Патенти кафедри', 'Patents departments') }}
+                </a>
+            </div>
+        </div>
+
+        <div class='main__block main__page collapsed'>
+
+            {{patentsHTML}}
+        
+        </div>
+    {% endif %}
+
+    {% if n %}
+        <div class="title title--collapsing js-collapse title--aside">
+            <div class="title__text">
+                {{ function('get_translation', 'Науково-дослідні роботи', 'Research work') }} ({{n}})
+            </div>
+
+            <div class='title__aside'>
+                <a href="/scientific-work/research-works/">
+                    {{ function('get_translation', 'Науково-дослідні роботи кафедри', 'Research work of the department') }}
+                </a>
+            </div>
+        </div>
+
+        <div class='main__block main__page collapsed'>
+
+            {{researchHTML}}
+        
+        </div>
+    {% endif %}
+
+    {% if l %}
+        <div class="title title--collapsing js-collapse title--aside">
+            <div class="title__text">
+                {{ function('get_translation', 'Методичні праці', 'Methodical works') }} ({{methodical_works|length}})
+            </div>
+
+            <div class='title__aside'>
+                <a href="/learning-process/methodical-works/">
+                    {{ function('get_translation', 'Методичні праці кафедри', 'Methodical works of the department') }}
+                </a>
+            </div>
+        </div>
+
+        <div class='main__block main__page collapsed'>
+
+            {{methodicalHTML}}
+        
+        </div>
+    {% endif %}
+
+    {% if certificates|length %}
+        <div class="title title--collapsing js-collapse title--aside">
+            <div class="title__text">
+                {{ function('get_translation', 'Сертифікати', 'Certificates') }} ({{certificates|length}})
+            </div>
+        </div>
+
+        <div class='main__block collapsed'>
+
+            <div class="slider--certificates slick-gallery">
+                {% for certificate in certificates %}
+                    {% set image = certificate.image %}
+
+                    {% set year = certificate.year %}
+
+                    {% if certarr['y'~year] %}
+                        {% set certCount = certarr['y'~year] %}
+                    {% else %}
+                        {% set certCount = 0 %}
+                    {% endif %}
+
+                    {% set certCount = certCount + 1 %}
+
+                    {% set name = 'y' ~ year %}
+                    {% set certarr = certarr|merge({ (name): (certCount)}) %}
+
+                    <div>
+                        <img data-lazy='{{image}}' alt=''>
+                    </div>
+                {% endfor %}
+            </div>
+        
+        </div>
+
+    {% endif %}
+
+    {% if awards|length %}
+        <div class="title title--collapsing js-collapse title--aside">
+            <div class="title__text">
+                {{ function('get_translation', 'Нагороди', 'Awards') }} ({{awards|length}})
+            </div>
+        </div>
+
+        <div class='main__block collapsed'>
+
+            <div class="slider--certificates slick-gallery">
+                {% for award in awards %}
+                    {% set image = award.image %}
+
+                    {% set year = award.year %}
+
+                    {% if awardarr['y'~year] %}
+                        {% set awardCount = awardarr['y'~year] %}
+                    {% else %}
+                        {% set awardCount = 0 %}
+                    {% endif %}
+
+                    {% set awardCount = awardCount + 1 %}
+
+                    {% set name = 'y' ~ year %}
+                    {% set awardarr = awardarr|merge({ (name): (awardCount)}) %}
+
+                    <div>
+                        <img data-lazy='{{image}}' alt=''>
+                    </div>
+                {% endfor %}
+            </div>
+        
+        </div>
+
+    {% endif %}
+
+    <div class="title title--collapsing js-collapse title--aside">
+        <div class="title__text">
+            {{ function('get_translation', 'Активність викладача', 'Teacher activity') }} (2008-{{ function('date', 'Y') }})
+        </div>
+    </div>
+
+    <div class='main__block main__block-stats collapsed'>
+
+        {% set currentYear = function('date', 'Y') %}
+        
+        <div style="text-align: center;">
+            <div class="years-block">
+                {% for year in currentYear..2008 %}
+                    <div data-year="{{year}}" class="years-block__item {% if loop.index0 == 0 %}years-block__item--active{% endif %} js-click-year">
+                        {{year}}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        {% for year in currentYear..2008 %}
+            <div class="year-block {% if loop.index0 == 0 %}year-block--active{% endif %}" data-year="{{year}}">
+                <h3>Активність за {{year}} рік</h3>
+                <table class='table table--teacher'>
+                    <tr>
+                        <th>
+                            Показник
+                        </th>
+                        <th>
+                            Значення
+                        </th>
+                    </tr>
+                    <tr>
+                        <td>
+                            Статті
+                        </td>
+                        <td>
+                            {% if art['y'~year] %}
+                                {{art['y'~year]}}
+                            {% else %}
+                                0
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Доповіді
+                        </td>
+                        <td>
+                            {% if rep['y'~year] %}
+                                {{rep['y'~year]}}
+                            {% else %}
+                                0
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Методичні праці
+                        </td>
+                        <td>
+                            {% if met['y'~year] %}
+                                {{met['y'~year]}}
+                            {% else %}
+                                0
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Патенти
+                        </td>
+                        <td>
+                            {% if patarr['y'~year] %}
+                                {{patarr['y'~year]}}
+                            {% else %}
+                                0
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Підручники
+                        </td>
+                        <td>
+                            {% if bookarr['y'~year] %}
+                                {{bookarr['y'~year]}}
+                            {% else %}
+                                0
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Монографії
+                        </td>
+                        <td>
+                            {% if monoarr['y'~year] %}
+                                {{monoarr['y'~year]}}
+                            {% else %}
+                                0
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Сертифікати
+                        </td>
+                        <td>
+                            {% if certarr['y'~year] %}
+                                {{certarr['y'~year]}}
+                            {% else %}
+                                0
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Нагороди
+                        </td>
+                        <td>
+                            {% if awardarr['y'~year] %}
+                                {{awardarr['y'~year]}}
+                            {% else %}
+                                0
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        {% endfor %}
+    
+    </div>
+
+</div>
+
+<style>
+.main__block-stats h3{
+    text-align: center;
+}
+.table.table--teacher{
+    max-width: 400px;
+    width: 100%;
+    margin: 0 auto;
+}
+.table.table--teacher td:first-child,
+.table.table--teacher th:first-child{
+    text-align: left;
+}
+.table.table--teacher td,
+.table.table--teacher th{
+    padding: 20px;
+    flex-basis: 100%;
+    display: flex;
+    place-content: center;
+    place-items: center;
+}
+.years-block{
+    display: inline-flex;
+    background: #F2F5F7;
+    color: #536a7b;
+    font-weight: bold;
+    text-align: center;
+    border-radius: 4px;
+    border: 1px solid #d0d4d6;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.years-block__item{
+    padding: 10px;
+    cursor: pointer;
+    transition: background .2s;
+    flex-grow: 1;
+    border-bottom: 1px solid #d0d4d6;
+}
+@media (min-width: 1000px){
+    .years-block__item{
+        border-bottom: 0;
+    }
+}
+.years-block__item--active,
+.years-block__item:hover{
+    background: #f6fbff;
+}
+.years-block__item:not(:last-child){
+    border-right: 1px solid #d0d4d6;
+}
+.year-block{
+    display: none;
+}
+.year-block--active{
+    display: block;
+}
+.table.table--teacher tr{
+    display: flex;
+}
+@media (max-width: 768px){
+    .title--opened + .main__block-stats{
+        grid-template-columns: 1fr;
+        justify-items: initial;
+    }
+    .table.table--teacher{
+        width: 100%;
+        background: #F2F5F7;
+        table-layout: fixed;
+    }
+    .table.table--teacher tr{
+        flex-wrap: nowrap;
+    }
+    .table.table--teacher td:first-child,
+    .table.table--teacher th:first-child{
+        text-align: center;
+    }
+    .table.table--teacher tr td:not(:last-child){
+        border-right: 2px solid #d0d4d6;
+    }
+}
+</style>

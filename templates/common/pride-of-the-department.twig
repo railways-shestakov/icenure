@@ -1,0 +1,30 @@
+<h1 class="main__title{{icon}}">
+   {{title}}
+</h1>
+
+<section class='pride-wrapper'>
+    {% for people in posts %}
+        {% for human in people.get_field('people') %}
+            {% set name = human.name %}
+            {% set content = human.content %}
+            {% set photo = human.photo %}
+            {% set shiftY = human['shift-y'] %}
+
+            <div class='main__block'>
+                <div class="pride">
+                    <div class="pride__photo">
+                        <img src='{{theme_dir}}/images/loader.svg' data-src='{{photo}}' alt="" style="{{shiftY ? "margin-top:" ~ shiftY ~ "%;" : ""}}">
+                    </div>
+                    <div>
+                        <div class="pride__name">
+                            {{name}}
+                        </div>
+                        <div class="pride__content">
+                            {{content}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% endfor %}
+</section>

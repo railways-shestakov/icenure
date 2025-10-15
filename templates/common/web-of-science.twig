@@ -1,0 +1,162 @@
+<h1 class="main__title" style='align-items: center; display: flex;'>
+    {{title}}
+
+    <div style='margin-left: 25px; line-height: 0;'>
+        <a href='https://www.webofscience.com/' target='blank' rel='nofollow'>
+            <img src='/wp-content/themes/nure/images/nbm/2.png' style='height: 63px;'>
+        </a>
+    </div>
+</h1>
+
+<style>
+@media (max-width: 768px){
+    .table tr td:nth-child(5){
+        flex-basis: 100%;
+    }
+    .table tr:last-child td:nth-child(5){
+        border-top: 2px solid #d0d4d6;
+    }
+}
+</style>
+
+<section>
+    <div class='main__block main__page'>
+        <table class='table table--scopus'>
+            <tr>
+                <th>    
+                    Автор
+                </th>
+                <th>
+                    <a href='?sort-by=h-index'>
+                        h-index
+                    </a>
+                </th>
+                <th>
+                    <a href='?sort-by=total-publications'>
+                        Загальна кількість публікацій автора
+                    </a>
+                </th>
+                <th>
+                    <a href='?sort-by=total-citations'>
+                        Загальна кількість цитувань
+                    </a>
+                </th>
+                <th>
+                    <a href='?sort-by=citing-articles'>
+                        Процитовано у статтях
+                    </a>
+                </th>
+            </tr>
+
+            {% set summ_hindex = 0 %}
+            {% set summ_publications = 0 %}
+            {% set summ_citations = 0 %}
+            {% set sum_articles = 0 %}
+
+            {% for teacher in posts %}
+                {% set name = function('get_translation', teacher.get_field('name_ua'), teacher.get_field('name_en')) %}
+                {% set image = function('wp_get_attachment_image_src', teacher.image, 'rta_thumb_no_cropped_480x')[0] %}
+                {% set handle = teacher.get_field('profile')[0].slug %}
+                {% if handle == '' %}
+                    {% set handle = teacher.slug %}
+                {% endif %}
+                {% set link = function('get_translation', '', '/en') ~ '/teaching-staff/' ~ handle %}
+                {% set publonsID = teacher.get_field('researcher_id') %}
+
+                {% set hIndex = teacher.get_field('publons_data')['h-index'] %}
+                {% set publications = teacher.get_field('publons_data')["publications"] %}
+                {% set totalCitations = teacher.get_field('publons_data')['total_citations'] %}
+                {% set citingArticles = teacher.get_field('publons_data')['citing_articles'] %}
+
+                {% set summ_hindex = summ_hindex + hIndex %}
+                {% set summ_publications = summ_publications + publications %}
+                {% set summ_citations = summ_citations + totalCitations %}
+                {% set sum_articles = sum_articles + citingArticles %}
+
+                {% if publonsID == "" %}
+                    {% set publonsID = teacher.get_field('publons_id') %}
+                {% endif %}
+
+                {% if hide_links == 1 and handle == '' %}
+                    {% set link = '#' %}
+                {% endif %}
+
+                {% if hIndex != "" %}
+                    <tr>
+                        <td>
+                            <div class='table--scopus__author'>
+                                <div class='table--scopus__author-image'>
+                                    <a href='{{link}}'>
+                                        <img src='{{theme_dir}}/images/loader.svg' data-src='{{image}}' alt=''>
+                                    </a>
+                                </div>
+                                <div class='table--scopus__author-data'>
+                                    <a href='{{link}}'>
+                                        {{name|replace({' ': "<br>"})}}
+                                    </a>
+                                    <a href='https://www.webofscience.com/wos/author/record/{{publonsID}}' target='blank' rel='nofollow'>
+                                        {{publonsID}}
+                                    </a>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {{hIndex}}
+                            <div class="mobile">
+                                h-index
+                            </div>
+                        </td>
+                        <td>
+                            {{publications}}
+                            <div class="mobile">
+                                Публікації
+                            </div>
+                        </td>
+                        <td>
+                            {{totalCitations}}
+                            <div class="mobile">
+                                Цитування
+                            </div>
+                        </td>
+                        <td>
+                            {{citingArticles}}
+                            <div class="mobile">
+                                Процитовано у статтях
+                            </div>
+                        </td>
+                    </tr>
+                {% endif %}
+            {% endfor %}
+
+            <tr>
+                <td>
+                </td>
+                <td>
+                    {{summ_hindex}}
+                    <div class="mobile">
+                        h-index
+                    </div>
+                </td>
+                <td>
+                    {{summ_publications}}
+                    <div class="mobile">
+                        Публікації
+                    </div>
+                </td>
+                <td>
+                    {{summ_citations}}
+                    <div class="mobile">
+                        Цитування
+                    </div>
+                </td>
+                <td>
+                    {{sum_articles}}
+                    <div class="mobile">
+                        Процитовано у статтях
+                    </div>
+                </td>
+            </tr>
+        </table>
+        
+    </div>
+</section>

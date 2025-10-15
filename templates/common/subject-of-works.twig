@@ -1,0 +1,83 @@
+{% set html %}
+
+<style>
+@media (max-width: 768px){
+    .table--subject tr td:nth-child(1){
+        display: none;
+    }
+    .table--subject tr td:nth-child(2),
+    .table--subject tr td:nth-child(3),
+    .table--subject tr td:nth-child(4){
+        flex-basis: 100%;
+        border-right: 0;
+    }
+    .table--subject tr td:nth-child(2),
+    .table--subject tr td:nth-child(3){
+        border-bottom: 0;
+        padding-bottom: 0;
+    }
+    .table--subject tr td:nth-child(2),
+    .table--subject tr td:nth-child(4){
+        font-size: 14px;
+        font-weight: 400;
+    }
+}
+</style>
+
+<section id="subjects">
+
+    <h2 class="main__title">
+        {{title}}
+    </h2>
+
+    <section>
+        <div class='main__block main__page'>
+            <table class='table table--subject' style='width: 100%;'>
+                <tr>
+                    <th>    
+                        №
+                    </th>
+                    <th>    
+                        {{ function('get_translation', "ПІБ Керівника", "Name of the manager") }}
+                    </th>
+                    <th>
+                        {{ function('get_translation', "Орієнтовна тематика кваліфікаційних робіт", "Approximate topic of qualification papers") }}
+                    </th>
+                    <th>
+                        {{ function('get_translation', "Спеціальність", "Speciality") }}
+                    </th>
+                </tr>
+
+                {% for row in posts %}
+                    {% set name = row.get_field("name") | trim %}
+                    {% set name_en = row.get_field("name_en") | trim %}
+                    {% set subject = row.get_field('subject') %}
+                    {% set subject_en = row.get_field('subject_en') %}
+                    {% set speciality = row.speciality %}
+                    {% set person = row.get_field('person') %}
+                
+                    <tr>
+                        <td>
+                            {{ loop.index }}
+                        </td>
+                        <td>
+                            {{ function('get_translation', name, name_en) }}
+                        </td>
+                        <td>
+                            {{ function('nl2br', function('get_translation', subject, subject_en) )}}
+                        </td>
+                        <td>
+                            {{ speciality | join(', ') }}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
+            
+        </div>
+    </section>
+
+</section>
+
+{% endset %}
+
+{{html}}

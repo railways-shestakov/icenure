@@ -1,0 +1,61 @@
+{% set search = function('get_translation', "Пошук", "Search") %}
+{% set dark_theme = function('get_translation', "Нічна тема", "Dark theme") %}
+{% set light_theme = function('get_translation', "Світла тема", "Light theme") %}
+
+<header class="header">
+  <div
+    class="header__inner"
+    style="position: relative; height: 180px;"
+  >
+    <img
+      src="/wp-content/themes/nure/images/agr.gif"
+      style="position: absolute; top: 0px; left: 570px; height: 180px;"
+    >
+    <div class='header__block'>
+      <div class='header__left'>
+        <div class="header__logo">
+          <a class='header__link' href='/'></a>
+        </div>
+        <div class='header__title'>
+          <a href='/'>
+          {{ function('get_translation',
+          "Кафедра інфокомунікаційної інженерії<br>імені В.В. Поповського",
+          "V.V. Popovskyy Department<br>of Infocommunication Engineering") }}
+          </a>
+        </div>
+      </div>
+      <div class='header__tools'>
+        {% if language == "ua" %}
+          <div class='language js-switch-en'>
+            <img class='language__img' src='{{theme_dir}}/images/UK.png'>
+            English
+          </div>
+        {% else %}
+          <div class='language js-switch-ua'>
+            <img class='language__img' src='{{theme_dir}}/images/ukraine.png'>
+            Українська
+          </div>
+        {% endif %}
+        
+        <div class="header__search">
+          <a href='/search'></a>
+          {{search}}
+        </div>
+        <!--<div class='darkMode js-darkMode'>
+          {{dark_mode ? light_theme : dark_theme}}
+        </div>-->
+      </div>
+    </div>
+  </div>
+  <div class="header__menu">
+    <div class="header__inner">
+      {{function('get_menu')}}
+    </div>
+  </div>
+</header>
+
+<style>
+main{
+  padding: 265px 0 0 !important;
+}
+</style>

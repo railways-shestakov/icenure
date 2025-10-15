@@ -1,0 +1,18 @@
+<h1 class="main__title{{icon}}">
+   {{title}}
+</h1>
+
+<section>
+    <div class='main__block'>
+        {% for monograph in monographs %}
+            {% set text = monograph.text %}
+            {% set url = monograph.url %}
+                <div class='textblock'>
+                    {{loop.index}}.
+                    {% if url %}<a href='{{url}}' rel='nofollow' target='blank'>{% endif %}
+                        {{text}}
+                        {% if url %}</a>{% endif %}
+                </div>
+        {% endfor %}
+    </div>
+</section>

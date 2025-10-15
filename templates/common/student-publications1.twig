@@ -1,0 +1,205 @@
+{% set art = [] %}
+{% set rep = [] %}
+{% set years = [] %}
+
+{% set scopus = [] %}
+{% set nonScopus = [] %}
+
+{% set artSum = 0 %}
+{% set repSum = 0 %}
+
+{% set lastyear = 0 %}
+
+{% for publication in posts %}
+    {% set type = publication.get_field('type') %}
+    {% set year = publication.get_field('year') %}
+
+    {% if type == 'Стаття' %}
+        {% set artSum = artSum + 1 %}
+    {% else %}
+        {% set repSum = repSum + 1 %}
+    {% endif %}
+
+    {% if year != lastyear %}
+        {% set lastyear = year %}
+        {% set years = years|merge([year]) %}
+    {% endif %}
+{% endfor %}
+
+<h1 class="main__title main__title--aside">
+    {{ title }}
+    <div class='main__subtitle'>
+        Усього {{ artSum }} {{ function('get_wordform', artSum, 'стаття', 'статті', 'статей' ) }}
+        та {{ repSum }} {{ function('get_wordform', repSum, 'доповідь', 'доповіді', 'доповідей' ) }}
+    </div>
+</h1>
+
+<section>
+    <div class="main__block main__chart">
+        <p style='margin-top: 0;'>
+            Статистика публікацій студентів та аспірантів кафедри у
+            <a
+                    style="color: #2f536d;"
+                    href='https://scholar.google.com/citations?user=HTBcGGoAAAAJ&hl=uk'
+            >
+                Google Scholar</a>.
+        </p>
+        <canvas id="cursor" width="730px" height="203px"></canvas>
+        <canvas id="publicationChart" width="100" height="40"></canvas>
+    </div>
+
+    {% set artLen = 0 %}
+    {% set repLen = 0 %}
+    {% set scopusSum = 0 %}
+
+    {% for publication in posts %}
+        {% set year = publication.get_field('year') %}
+        {% set type = publication.get_field('type') %}
+        {% set nextyear = posts[loop.index0 + 1].get_field('year') %}
+
+        {% if type == 'Стаття' %}
+            {% set artLen = artLen + 1 %}
+        {% else %}
+            {% set repLen = repLen + 1 %}
+        {% endif %}
+
+        {% if publication.scopus %}
+            {% set scopusSum = scopusSum + 1 %}
+        {% endif %}
+
+        {% if nextyear != year %}
+            {% set link = function('get_translation', '/ua', '/en') ~ '/student-publications/' ~ year %}
+            {% set art = art|merge([artLen]) %}
+            {% set rep = rep|merge([repLen]) %}
+            {% set scopus = scopus|merge([scopusSum]) %}
+            {% set nonScopusSum = artLen + repLen - scopusSum %}
+            {% set nonScopus = nonScopus|merge([nonScopusSum]) %}
+
+            <div class="main__block">
+                <div class="row">
+                    <div>
+                        <div class="row__name">
+                            <a href='{{ link }}'>
+                                Публікації за {{ year }} рік
+                            </a>
+                        </div>
+                        <div class="row__content">
+                            У {{ year }} році опубліковано
+                            {{ artLen == 0 and repLen == 0 ? " взагалі нічого" : "" }}{{ artLen
+                            ? artLen ~ " " ~ function('get_wordform', artLen, 'статтю', 'статті', 'статей')
+                            : "" }}{{ artLen > 0 and repLen > 0 ? " та " : "" }}{{ repLen
+                            ? repLen ~ " " ~ function('get_wordform', repLen, 'доповідь', 'доповіді', 'доповідей' )
+                            : "" }}.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            {% set artLen = 0 %}
+            {% set repLen = 0 %}
+            {% set scopusSum = 0 %}
+
+        {% endif %}
+
+    {% endfor %}
+</section>
+
+<script>
+    Chart.defaults.global.defaultFontSize = 14;
+    Chart.defaults.global.defaultFontColor = '#2F536D';
+    Chart.defaults.global.defaultFontFamily = 'Montserrat';
+    let ctx = document.getElementById('publicationChart').getContext('2d');
+    window.chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: [{{ years|reverse|join(',') }}],
+            datasets: [
+                {
+                    data: [{{ art|reverse|join(',') }}],
+                    label: "Статті",
+                    borderColor: "#3E95CD",
+                    pointBackgroundColor: "#3E95CD",
+                    pointHoverBackgroundColor: "#3E95CD",
+                    backgroundColor: "#3E95CD",
+                    pointHoverRadius: 5,
+                    fill: false
+                },
+                {
+                    data: [{{ rep|reverse|join(',') }}],
+                    label: "Доповіді",
+                    borderColor: "#8E5EA2",
+                    pointBackgroundColor: "#8E5EA2",
+                    pointHoverBackgroundColor: "#8E5EA2",
+                    backgroundColor: "#8E5EA2",
+                    pointHoverRadius: 5,
+                    fill: false
+                },
+            ],
+        },
+        options: {
+            responsive: true,
+            title: {
+                display: true,
+                text: 'Статистика публікацій за роками',
+                fontSize: 16
+            },
+            tooltips: {
+                mode: 'label',
+                intersect: false
+            },
+            legend: {
+                align: 'start',
+                position: 'bottom',
+                labels: {
+                    fontSize: 14,
+                    usePointStyle: true,
+                    boxWidth: 10,
+                }
+            },
+            scales: {
+                yAxes: [
+                    {
+                        ticks: {
+                            precision: 0,
+                        },
+                    },
+                ],
+            }
+        }
+    });
+
+    {% if dark_mode %}
+    Chart.defaults.global.defaultFontColor = '#ffffff';
+    let yAxes = chart.options.scales.yAxes;
+    let xAxes = chart.options.scales.xAxes;
+
+    for (let key in yAxes) {
+        yAxes[key].gridLines.zeroLineColor = 'rgba(255,255,255,.25)';
+        yAxes[key].gridLines.color = 'rgba(255,255,255,.1)';
+    }
+
+    for (let key in xAxes) {
+        xAxes[key].gridLines.zeroLineColor = 'rgba(255,255,255,.25)';
+        xAxes[key].gridLines.color = 'rgba(255,255,255,.1)';
+    }
+    {% endif %}
+
+    $(document).ready(function () {
+        $('#publicationChart').on("mousemove", function (e) {
+            let element = $("#cursor");
+            let domElement = element[0];
+            let offsetLeft = domElement.getBoundingClientRect().left;
+            let clientX = (e.clientX - offsetLeft);
+            let ctx = domElement.getContext('2d');
+
+            ctx.clearRect(0, 0, domElement.width, domElement.height);
+            ctx.beginPath();
+            ctx.moveTo(clientX, 0);
+            ctx.lineTo(clientX, domElement.height);
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = "#E5E5E5";
+            ctx.stroke();
+        });
+    });
+</script>

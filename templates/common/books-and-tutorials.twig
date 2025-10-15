@@ -1,0 +1,40 @@
+<h1 class="main__title">
+   {{title}}
+</h1>
+
+<section>
+    {% for book in posts %}
+        {% set name = function('get_translation', book.get_field('name'), book.get_field('name_en')) %}
+        {% set content = function('get_translation', book.get_field('content'), book.get_field('content_en'))|striptags %}
+        {% set image = function('wp_get_attachment_image_src', book.image, 'rta_thumb_no_cropped_480x')[0] %}
+        {% set link = function('get_translation', '', '/en') ~ '/books-and-tutorials/' ~ book.slug %}
+        {% set shiftX = book.get_field('shift_x') %}
+
+        {% if content|length > 350 %}
+            {% set content = content|slice(0, 350) ~ '...' %}
+        {% endif %}
+
+        {% set size = function('getimagesize', image) %}
+        {% set width = size[0] %}
+        {% set height = size[1] %}
+
+        <div class="main__block main__block--books">
+            <div class="row">
+                <div class="row__image">
+                    <img src='{{theme_dir}}/images/loader.svg' data-src='{{image}}' alt="" style="{{width < height ? 'max-height: initial; max-width: 100%;' : ''}}" data-shift-x="{{shiftX ? shiftX : ""}}">
+                </div>
+                <div>
+                    <div class="row__name">
+                        <a href='{{link}}'>
+                            {{name}}
+                        </a>
+                    </div>
+                    <div class="row__content">
+                        {{content}}
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    {% endfor %}
+</section>

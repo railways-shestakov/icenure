@@ -1,0 +1,111 @@
+{% set year = '' %}
+
+{% for group in posts %}
+    {% set year = group.year %}
+{% endfor %}
+
+{% set title = function('get_translation', 'Публікації за ' ~ year ~ ' рік', 'News') %}
+
+<h1 class="main__title">
+    {{title}}
+</h1>
+
+<section>
+    <div class='main__block main__page'>
+
+        {% for group in posts %}
+            {% if group.get_field('articles')|length %}
+                <div class="title">
+                    {{ function('get_translation', "Статті", "Articles") }}
+                </div>
+            {% endif %}
+        {% endfor %}
+
+        {% for group in posts %}
+            {% set articles = group.get_field('articles') %}
+            {% set reports = group.get_field('reports') %}
+
+            {% for article in articles %}
+                {% set authors = article.authors %}
+                {% set text = article.text %}
+                {% set wos = article.wos %}
+                {% set scopus = article.scopus %}
+                {% set doi = article.doi %}
+                {% set quartile = article.quartile %}
+                
+                <div class='publication'>
+                    <div class='publication--authors'>
+                        {{loop.index}}. {{authors}}
+
+                        {% if scopus != false %}
+                            <div class='tag tag--blue'>
+                                Scopus
+                            </div>
+                        {% endif %}
+                        {% if wos != false %}
+                            <div class='tag tag--blue'>
+                                WoS
+                            </div>
+                        {% endif %}
+                        {% if quartile != '' %}
+                            <div class='tag tag--green'>
+                                {{quartile}}
+                            </div>
+                        {% endif %}
+                        {% if doi != '' %}
+                            <div class='tag tag--brown'>
+                                DOI
+                                <a href='{{doi}}' target='blank' rel='nofollow'></a>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class='publication--text'>
+                        {{text}}
+                    </div>
+                    
+                </div>
+            {% endfor %}
+
+            <div class="title">
+                {{ function('get_translation', "Доповіді", "Reports") }}
+            </div>
+
+            {% for report in reports %}
+                {% set authors = report.authors %}
+                {% set text = report.text %}
+                {% set scopus = report.scopus %}
+                {% set doi = report.doi %}
+                {% set quartile = report.quartile %}
+                
+                <div class='publication'>
+                    <div class='publication--authors'>
+                        {{loop.index}}. {{authors}}
+
+                        {% if scopus != false %}
+                            <div class='tag tag--blue'>
+                                Scopus
+                            </div>
+                        {% endif %}
+                        
+                        {% if quartile != false %}
+                            <div class='tag tag--green'>
+                                {{quartile}}
+                            </div>
+                        {% endif %}
+
+                        {% if doi != '' %}
+                            <div class='tag tag--brown'>
+                                DOI
+                                <a href='{{doi}}' target='blank' rel='nofollow'></a>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class='publication--text'>
+                        {{text}}
+                    </div>
+                </div>
+            {% endfor %}
+        {% endfor %}
+
+    </div>
+</section>

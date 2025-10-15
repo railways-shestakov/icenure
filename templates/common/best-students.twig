@@ -1,0 +1,708 @@
+{% set maleSum = 0 %}
+{% set femaleSum = 0 %}
+{% set sum125 = 0 %}
+{% set sum126 = 0 %}
+{% set sum172 = 0 %}
+{% set sumCourse1 = 0 %}
+{% set sumCourse2 = 0 %}
+{% set sumCourse3 = 0 %}
+{% set sumCourse4 = 0 %}
+{% set sumCourse5 = 0 %}
+{% set sumCourse6 = 0 %}
+
+{% set html %}
+
+<style>
+@media (min-width: 769px){
+    #best{
+        max-width: calc(100% - 300px);
+    }
+}
+.author-wrapper{
+    display: flex;
+    align-items: center;
+    text-align: left;
+}
+.author-data{
+    margin-left: 10px;
+}
+.author-image{
+    width: 120px;
+    flex-shrink: 0;
+}
+
+.author-certificates{
+    display: block;
+    cursor: pointer;
+}
+.author-certificates + .author-certificates{
+    margin-top: 15px;
+}
+
+.certificates-list{
+    display: none;
+}
+
+.section--statistics.active{
+    margin: 0 0 20px;
+}
+
+@media (max-width: 768px){
+    .author-image{
+        width: 150px;
+    }
+    .table--best-students.table tr td:nth-child(4),
+    .table--best-students.table tr td:nth-child(6){
+        border-right: 0;
+    }
+    .table--best-students.table tr td:nth-child(5),
+    .table--best-students.table tr td:nth-child(6){
+        flex-basis: 50%;
+    }
+    .table--best-students.table tr td:last-child{
+        flex-basis: 100%;
+    }
+    .table--best-students.table tr:last-child td:nth-child(2),
+    .table--best-students.table tr:last-child td:nth-child(3),
+    .table--best-students.table tr:last-child td:nth-child(4),
+    .table--best-students.table tr:last-child td:nth-child(5),
+    .table--best-students.table tr:last-child td:nth-child(6){
+        border-bottom: 2px solid #d0d4d6;
+    }
+}
+
+.current_session{
+    color: #2f536d;
+    margin: -10px 0 15px;
+    font: bold 18px/1.25 "Montserrat";
+}
+
+@media (min-width: 769px){
+    .current_session{
+        padding-left: 15px;
+    }
+
+    .table--best-students.table th:nth-child(2),
+    .table--best-students.table th:nth-child(3),
+    .table--best-students.table th:nth-child(4){
+        width: 13%;
+    }
+}
+</style>
+
+<section id="best">
+
+    <h2 class="main__title main__title--aside">
+        {{title}}
+
+        <div>
+            <a href='#' class='js-show-statistics handler'>
+                <span class='active'>
+                    {{ function('get_translation', 'Переглянути статистику по відмінникам', 'View statistics on excellent students') }}
+                </span>
+                <span>
+                    {{ function('get_translation', 'Сховати статистику по відмінникам', 'Hide statistics for excellent students') }}
+                </span>
+            </a>
+        </div>
+    </h2>
+
+    <div class="current_session">
+        {% set break = false %}
+        {% set active_session = 0 %}
+
+        {% for session in sessions if not break %}
+            {% set is_active = session.last_session %}
+
+            {% if is_active and not session_id %}
+                {% set active_session = session %}
+                {% set break = true %}
+            {% endif %}
+
+            {% if session_id == session.id %}
+                {% set active_session = session %}
+                {% set break = true %}
+            {% endif %}
+        {% endfor %}
+
+        <select id="year_change" style="display: none;">
+            {# Собираем сессии в ассоциативный массив с вычислением сортировочного ключа #}
+            {% set sessions_by_key = {} %}
+            {% for session in sessions %}
+                {# Определяем академический год и порядок внутри года:
+       для весны – academicYear = year_end - 1 и inner_order = 0 (будет раньше),
+       для осени – academicYear = year_start и inner_order = 1 #}
+                {% if session.season == 'весна' %}
+                    {% set academicYear = session.year_end - 1 %}
+                    {% set inner_order = 0 %}
+                {% elseif session.season == 'осінь' %}
+                    {% set academicYear = session.year_start %}
+                    {% set inner_order = 1 %}
+                {% else %}
+                    {# Если вдруг встречаются иные сезоны, используем year_start и более низкий приоритет #}
+                    {% set academicYear = session.year_start %}
+                    {% set inner_order = 2 %}
+                {% endif %}
+
+                {# Вычисляем сортировочный ключ.
+       Используем формулу, где чем больше academicYear, тем меньше ключ:
+         key_number = ((100 - academicYear) * 10) + inner_order
+       Например, для академического года 24:
+         Если осень: key_number = (100 - 24) * 10 + 1 = 76*10+1 = 761
+       Для академического года 23:
+         Если весна: key_number = (100 - 23) * 10 + 0 = 77*10+0 = 770,
+         Если осень: key_number = (100 - 23) * 10 + 1 = 771.
+       При сортировке по возрастанию получим: 761, 770, 771, …  То есть с меньшим числом – более новая сессия.  }
+    {% set key_number = ((100 - academicYear) * 10) + inner_order %}
+    {% set key = '%03d'|format(key_number) %}
+    {# Добавляем уникальный суффикс, чтобы при совпадении ключей данные не перезаписывались #}
+                {% set unique_key = key ~ '-' ~ loop.index %}
+
+                {# Сохраняем все нужные свойства в массиве: id, season, year_start, year_end,
+       а также вычисленные academicYear, inner_order и combined_key (key) для отладки. #}
+                {% set sessions_by_key = sessions_by_key|merge({ (unique_key): {
+                    'id': session.id,
+                    'season': session.season,
+                    'year_start': session.year_start,
+                    'year_end': session.year_end,
+                    'academicYear': academicYear,
+                    'inner_order': inner_order,
+                    'combined_key': key
+                }}) %}
+            {% endfor %}
+
+            {# Получаем отсортированные ключи по возрастанию, а затем разворачиваем их для убывающего порядка #}
+            {% set sorted_keys = sessions_by_key|keys|sort %}
+            {% set sorted_sessions = sorted_keys|reverse %}
+
+            {% for key in sorted_keys %}
+                {% set s = sessions_by_key[key] %}
+                <option value="{{ s.id }}" {% if active_session.id == s.id %}selected="true"{% endif %}>
+                    {% if s.season == 'осінь' %}
+                        {{ function('get_translation', "Осінь", "Autumn") }}
+                    {% elseif s.season == 'весна' %}
+                        {{ function('get_translation', "Весна", "Spring") }}
+                    {% elseif s.season == 'літо' %}
+                        {{ function('get_translation', "Літо", "Summer") }}
+                    {% elseif s.season == 'зима' %}
+                        {{ function('get_translation', "Зима", "Winter") }}
+                    {% endif %}
+                    {{ s.year_start }}/{{ s.year_end }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <div style="float: right;">
+            <a id="lll" style="color: #2f536d; font-size: 16px;" href="https://ice.nure.ua/wp-content/uploads/2023/02/Polozhennia_pro_konkurs_Studenty_vidminnyky_kafedry_IKI_imeni_V_V.pdf" target="_blank">
+                «Положення про конкурс Студенти-відмінники»
+            </a>
+            <style>
+            #lll:hover{
+                text-decoration: underline;
+            }
+            </style>
+        </div>
+    </div>
+
+    {% set sortedStudents = [] %}
+    {% set idToValue = [] %}
+
+    {% for student in posts %}
+        {% set break = false %}
+
+        {% set data_per_session = student.get_field("data_per_session") %}
+        {% set session_data = 0 %}
+
+        {% for session in data_per_session if not break %}
+            {% if session.session.id == active_session.id %}
+                {% set break = true %}
+                {% set session_data = session %}
+            {% endif %}
+        {% endfor %}
+        
+        {% if break == true %}
+
+            {% if session_data[sort_by] == nil %}
+                {% set idToValue = idToValue|merge({ ('_' ~ student.id): student.get_field(sort_by)|number_format }) %} 
+            {% else %}
+                {% set idToValue = idToValue|merge({ ('_' ~ student.id): session_data[sort_by]|replace({',': '.'})|round(2) }) %} 
+            {% endif %}
+            
+            {% set sortedStudents = sortedStudents|merge([student]) %}
+
+        {% endif %}
+
+    {% endfor %}
+
+    {% set sortedStudents = function("sortStudents", sort_by, sortedStudents, idToValue) %}
+
+    <section>
+        <div class='main__block main__page'>
+            <table class='table table--best-students' style='width: 100%;'>
+                <tr>
+                    <th>    
+                        {{ function('get_translation', "Студент", "Student") }}
+                    </th>
+                    <th>
+                        <a href='?sort-by=min-mark&session_id={{active_session.id}}'>
+                            {{ function('get_translation', "Мін. бал", "Min") }}
+                        </a>
+                    </th>
+                    <th>
+                        <a href='?sort-by=max-mark&session_id={{active_session.id}}'>
+                            {{ function('get_translation', "Макс. бал", "Max") }}
+                        </a>
+                    </th>
+                    <th>
+                        <a href='?sort-by=average-mark&session_id={{active_session.id}}'>
+                            {{ function('get_translation', "Сер. бал", "Average") }}
+                        </a>
+                    </th>
+                    <th>    
+                        <a href='?sort-by=articles&session_id={{active_session.id}}'>
+                            {{ function('get_translation', "Статті", "Articles") }}
+                        </a>
+                    </th>
+                    <th>    
+                        <a href='?sort-by=reports&session_id={{active_session.id}}'>
+                            {{ function('get_translation', "Доповіді", "Reports") }}
+                        </a>
+                    </th>
+                    <th>    
+                        {{ function('get_translation', "Сертифікати", "Certificates") }}
+                    </th>
+                </tr>
+
+                {% for student in sortedStudents %}
+                    {% set break = false %}
+                    {% set data_per_session = student.get_field("data_per_session") %}
+                    {% set name = student.get_field("name") | trim %}
+                    {% set name_en = student.get_field("name_en") | trim %}
+                    {% set image = function('wp_get_attachment_image_src', student.photo, 'rta_thumb_no_cropped_480x')[0] %}
+                    {% set certificates = student.get_field('certificates') %}
+                    {% set sport = student.get_field('sport') %}
+                    {% set olymp = student.get_field('olymp') %}
+                    {% set championship = student.get_field('championship') %}
+                    {% set articles = student.get_field('articles') %}
+                    {% set reports = student.get_field('reports') %}
+                    {% set gender = student.get_field('gender') %}
+                    {% set speciality = student.get_field('speciality') %}
+                    {% set anonymous = student.get_field('anonymous') %}
+                    {% set session_data = 0 %}
+
+                    {% for session in data_per_session if not break %}
+                        {% if session.session.id == active_session.id %}
+                            {% set break = true %}
+                            {% set session_data = session %}
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% set course = session_data.Course %}
+                    {% set group = session_data.group | trim %}
+                    {% set group_en = session_data.group_en | trim %}
+
+                    {% if break == true %}
+
+                    {% if gender == "Чоловік" %}
+                        {% set maleSum = maleSum + 1 %}
+                    {% else %}
+                        {% set femaleSum = femaleSum + 1 %}
+                    {% endif %}
+
+                    {% if speciality == "125" %}
+                        {% set sum125 = sum125 + 1 %}
+                    {% endif %}
+
+                    {% if speciality == "126" %}
+                        {% set sum126 = sum126 + 1 %}
+                    {% endif %}
+
+                    {% if speciality == "172" %}
+                        {% set sum172 = sum172 + 1 %}
+                    {% endif %}
+
+                    {% if course == "1 курс" %}
+                        {% set sumCourse1 = sumCourse1 + 1 %}
+                    {% endif %}
+
+                    {% if course == "2 курс" %}
+                        {% set sumCourse2 = sumCourse2 + 1 %}
+                    {% endif %}
+
+                    {% if course == "3 курс" %}
+                        {% set sumCourse3 = sumCourse3 + 1 %}
+                    {% endif %}
+
+                    {% if course == "4 курс" %}
+                        {% set sumCourse4 = sumCourse4 + 1 %}
+                    {% endif %}
+
+                    {% if course == "5 курс" %}
+                        {% set sumCourse5 = sumCourse5 + 1 %}
+                    {% endif %}
+
+                    {% if course == "6 курс" %}
+                        {% set sumCourse6 = sumCourse6 + 1 %}
+                    {% endif %}
+
+                    {% if anonymous == true %}
+                    {%  else %}
+                    <tr>
+                        <td>
+                            <div class="author-wrapper">
+                                <div class='author-image'>
+                                    {% if anonymous == true %}
+                                        <img src='{{theme_dir}}/images/loader.svg' data-src='https://ice.nure.ua/wp-content/uploads/2020/07/9.png' alt=''>
+                                    {% else %}
+                                        <img src='{{theme_dir}}/images/loader.svg' data-src='{{image}}' alt=''>
+                                    {% endif %}
+                                </div>
+                                <div class='author-data'>
+                                    <div>
+                                        {% if anonymous == true %}
+                                            {{ function('get_translation', "Студент захотів бути анонімним", "Student wished to stay anonymous") }}
+                                        {% else %}
+                                            {{ function('get_translation', name, name_en) }},
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        {{ function('get_translation', group, group_en) }}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {{ session_data.min_mark }}
+                            <div class="mobile">
+                                {{ function('get_translation', "Мін. бал", "Min") }}
+                            </div>
+                        </td>
+                        <td>
+                            {{ session_data.max_mark }}
+                            <div class="mobile">
+                                {{ function('get_translation', "Макс. бал", "Max") }}
+                            </div>
+                        </td>
+                        <td>
+                            {{ session_data.average_mark|replace({ '.': ',' }) }}
+                            <div class="mobile">
+                                {{ function('get_translation', "Сер. бал", "Average") }}
+                            </div>
+                        </td>
+                        <td>
+                            {% if articles == "" %}
+                                —
+                            {% else %}
+                                {{ articles }}
+                            {% endif %}
+                            <div class="mobile">
+                                {{ function('get_translation', "Статті", "Articles") }}
+                            </div>
+                        </td>
+                        <td>
+                            {% if reports == "" %}
+                                —
+                            {% else %}
+                                {{ reports }}
+                            {% endif %}
+                            <div class="mobile">
+                                {{ function('get_translation', "Доповіді", "Reports") }}
+                            </div>
+                        </td>
+                        <td>
+                            {% set hasCertificates = false %}
+
+                            {% if certificates|length %}
+                                {% set hasCertificates = true %}
+                                <a class="author-certificates" data-list="0">
+                                    {{ certificates|length }}
+                                </a>
+                            {% endif %}
+                            {% if championship|length or olymp|length %}
+                                {% set hasCertificates = true %}
+                                <a class="author-certificates" data-list="1">
+                                    {{ function('get_translation', "Перемоги у конкурсах та олімпіадах", "Victories in competitions and Olympiads") }}
+                                </a>
+                            {% endif %}
+                            {% if sport|length %}
+                                {% set hasCertificates = true %}
+                                <a class="author-certificates" data-list="2">
+                                    {{ function('get_translation', "Активність у спорті", "Victories in competitions and Olympiads") }}
+                                </a>
+                            {% endif %}
+
+                            {% if hasCertificates == false %}
+                                —
+                            {% endif %}
+
+                            <div class="certificates-list certificates-list--champ slick-gallery">
+                                {% for certificate in certificates %}
+                                    {% set image = certificate.image %}
+
+                                    <div>
+                                        <img data-lazy='{{image}}' alt=''>
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="certificates-list certificates-list--usual slick-gallery">
+                                {% for certificate in championship %}
+                                    {% set image = certificate.image %}
+
+                                    <div>
+                                        <img data-lazy='{{image}}' alt=''>
+                                    </div>
+                                {% endfor %}
+
+                                {% for certificate in olymp %}
+                                    {% set image = certificate.image %}
+
+                                    <div>
+                                        <img data-lazy='{{image}}' alt=''>
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="certificates-list certificates-list--sport slick-gallery">
+                                {% for certificate in sport %}
+                                    {% set image = certificate.image %}
+
+                                    <div>
+                                        <img data-lazy='{{image}}' alt=''>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </td>
+                    </tr>
+
+                    {% endif %}
+                    {%  endif %}
+                {% endfor %}
+            </table>
+            
+        </div>
+
+        <p>
+            {{ function('get_translation', "* На цій сторінці розміщено інформацію лише по тим студентам-відмінникам, які погодились на її розміщення у відкритому доступі", "On this page, there is no information about students who didn't agree for of its placement at the open access") }}
+        </p>
+    </section>
+
+</section>
+
+{% endset %}
+
+<section class='section section--statistics toggle'>
+    <h1 class="main__title">
+        {{ function('get_translation', 'Статистика по відмінникам', 'Statistics on excellent students') }}
+    </h1>
+
+    <div class="main__block main__chart main__chart--flex">
+
+        <div>
+            <canvas id="genderChart"></canvas>
+        </div>
+
+        <div>
+            <canvas id="specialityChart"></canvas>
+        </div>
+
+        <div>
+            <canvas id="courseChart"></canvas>
+        </div>
+
+    </div>
+</section>
+
+ <script>
+Chart.defaults.global.defaultFontSize = 14;
+Chart.defaults.global.defaultFontColor = '#2F536D';
+Chart.defaults.global.defaultFontFamily = 'Montserrat';
+
+let ctx = document.getElementById('genderChart').getContext('2d');
+window.chart = new Chart(ctx, {
+  type: 'doughnut',
+  data: {
+    datasets: [{
+        data: [
+            {{maleSum}},
+            {{femaleSum}}
+        ],
+        backgroundColor: [
+            "#3e95cd",
+            "#8e5ea2"
+        ],
+        borderColor: "transparent"
+    }],
+	labels: [
+		{{ function('get_translation', '"Чоловіки"', '"Men"') }},
+		{{ function('get_translation', '"Жінки"', '"Women"') }},
+	]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    title: {
+      display: true,
+      text: {{ function('get_translation', '"Розподіл за статтю"', '"Distribution by sex"') }},
+      fontSize: 18
+    },
+    tooltips: {
+      mode: 'label',
+      intersect: false
+    },
+    legend: {
+        align: 'center',
+        position: 'bottom',
+        labels: {
+            fontSize: 14,
+            usePointStyle: true,
+            boxWidth: 10,
+        }
+    },
+    plugins: {
+        labels: {
+            render: 'value',
+            fontSize: 14,
+            fontStyle: 'bold',
+            fontColor: '#fff'
+        }
+    }
+  }
+});
+
+let ctx2 = document.getElementById('specialityChart').getContext('2d');
+window.chart2 = new Chart(ctx2, {
+  type: 'doughnut',
+  data: {
+    datasets: [{
+        data: [
+            {{sum125}},
+            {{sum172}},
+            {% if sum126 > 0 %}{{sum126}},{% endif %}
+        ],
+        backgroundColor: [
+            "#3e95cd",
+            "#8e5ea2",
+            {% if sum126 > 0 %}"#ea5f65",{% endif %}
+        ],
+        borderColor: "transparent"
+    }],
+	labels: [
+        {{ function('get_translation', '"125 Кібербезпека"', '"125 Cybersecurity"') }},
+		{{ function('get_translation', '"172 Телекомунікації та радіотехніка"', '"172 Telecommunications and radio engineering"') }},
+		{% if sum126 > 0 %}{{ function('get_translation', '"126 Інформаційні системи та технології"', '"126 Information systems and technologies"') }},{% endif %}
+	]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    title: {
+      display: true,
+      text: {{ function('get_translation', '"Розподіл за спеціальностями"', '"Distribution by specialty"') }},
+      fontSize: 18
+    },
+    tooltips: {
+      mode: 'label',
+      intersect: false
+    },
+    legend: {
+        align: 'center',
+        position: 'bottom',
+        labels: {
+            fontSize: 14,
+            usePointStyle: true,
+            boxWidth: 10,
+        }
+    },
+    plugins: {
+        labels: {
+            render: 'value',
+            fontSize: 14,
+            fontStyle: 'bold',
+            fontColor: '#fff'
+        }
+    }
+  }
+});
+
+let ctx3 = document.getElementById('courseChart').getContext('2d');
+window.chart3 = new Chart(ctx3, {
+  type: 'doughnut',
+  data: {
+    datasets: [{
+        data: [
+            {% if sumCourse1 > 0 %}{{sumCourse1}},{% endif %}
+            {% if sumCourse2 > 0 %}{{sumCourse2}},{% endif %}
+            {% if sumCourse3 > 0 %}{{sumCourse3}},{% endif %}
+            {% if sumCourse4 > 0 %}{{sumCourse4}},{% endif %}
+            {% if sumCourse5 > 0 %}{{sumCourse5}},{% endif %}
+            {% if sumCourse6 > 0 %}{{sumCourse6}},{% endif %}
+        ],
+        backgroundColor: [
+            {% if sumCourse1 > 0 %}"#3e95cd",{% endif %}
+            {% if sumCourse2 > 0 %}"#8e5ea2",{% endif %}
+            {% if sumCourse3 > 0 %}"#ea5f65",{% endif %}
+            {% if sumCourse4 > 0 %}"#6e5fea",{% endif %}
+            {% if sumCourse5 > 0 %}"#5fcbea",{% endif %}
+            {% if sumCourse6 > 0 %}"#5fea9d",{% endif %}
+        ],
+        borderColor: "transparent"
+    }],
+	labels: [
+        {% if sumCourse1 > 0 %}{{ function('get_translation', '"1 курс"', '"1 year"') }},{% endif %}
+		{% if sumCourse2 > 0 %}{{ function('get_translation', '"2 курс"', '"2 year"') }},{% endif %}
+        {% if sumCourse3 > 0 %}{{ function('get_translation', '"3 курс"', '"3 year"') }},{% endif %}
+        {% if sumCourse4 > 0 %}{{ function('get_translation', '"4 курс"', '"4 year"') }},{% endif %}
+		{% if sumCourse5 > 0 %}{{ function('get_translation', '"5 курс"', '"5 year"') }},{% endif %}
+        {% if sumCourse6 > 0 %}{{ function('get_translation', '"6 курс"', '"6 year"') }},{% endif %}
+	]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    title: {
+      display: true,
+      text: {{ function('get_translation', '"Розподіл за курсом"', '"Distribution by year"') }},
+      fontSize: 18
+    },
+    tooltips: {
+      mode: 'label',
+      intersect: false
+    },
+    legend: {
+        align: 'center',
+        position: 'bottom',
+        labels: {
+            fontSize: 14,
+            usePointStyle: true,
+            boxWidth: 10,
+        }
+    },
+    plugins: {
+        labels: {
+            render: 'value',
+            fontSize: 14,
+            fontStyle: 'bold',
+            fontColor: '#fff'
+        }
+    }
+  }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    const select = document.querySelector("#year_change");
+    select.style.display = "inline-block"
+    
+    select.addEventListener("change", (e) => {
+        const session_id = select.options[select.selectedIndex].value;
+
+        let queryParams = new URLSearchParams(window.location.search);
+        queryParams.set("session_id", session_id);
+        history.pushState(null, null, "?"+queryParams.toString());
+        window.location.reload(true);
+    });
+});
+
+</script>
+
+{{html}}

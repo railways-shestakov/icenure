@@ -1,0 +1,26 @@
+{% for news in posts %}
+    {% set title = function('get_translation', news.title_ua, news.title_en) %}
+    {% set description = function('get_translation', news.description_ua, news.description_en) %}
+    {% set image = function('wp_get_attachment_image_src', news.image, 'rta_thumb_no_cropped_480x')[0] %}
+    {% set link = function('get_translation', '', '/en') ~ '/news/' ~ news.slug %}
+    {% set url = news.url %}
+    {% set attr = '' %}
+
+    {% if url != '' %}
+        {% set link = url %}
+        {% set attr = 'rel="nofollow" target="blank"' %}
+    {% endif %}
+    <div class='news-card'>
+        <div class="news-card__title">
+            {{title}}
+            <a class='news-card__link' href='{{link}}' {{attr}}></a>
+        </div>
+        <div class="news-card__text">
+            {{description}}
+        </div>
+        <div class="news-card__image">
+            <img class='loader' src='{{theme_dir}}/images/loader.svg' data-src='{{image}}'>
+            <img class='loader news-card__bg' src="//:0" data-src='{{image}}'>
+        </div>
+    </div>
+{% endfor %}

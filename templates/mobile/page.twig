@@ -1,0 +1,56 @@
+{% set title = "" %}
+{% set content = "" %}
+{% set icon = "" %}
+{% set template = "" %}
+
+{% for page in posts %}
+    {% set title = function('get_translation', page.title_ua, page.title_en) %}
+    {% set content = function('get_translation', page.text_ua, page.text_en) %}
+    {% set icon = page.icon %}
+    {% set template = page.template %}
+{% endfor %}
+
+{% if icon == "Відсутня" %}
+   {% set icon = "" %}
+{% elseif icon == "Мегафон" %}
+   {% set icon = " icon icon-megaphone" %}
+{% elseif icon == "Кафедра" %}
+   {% set icon = " icon icon-bank" %}
+{% elseif icon == "Ракета" %}
+   {% set icon = " icon icon-rocket" %}
+{% elseif icon == "Ковба" %}
+   {% set icon = " icon icon-beaker" %}
+{% elseif icon == "Конфедератка" %}
+   {% set icon = " icon icon-graduation-cap" %}
+{% elseif icon == "Люди" %}
+   {% set icon = " icon icon-users" %}
+{% else %}
+   {% set icon = "" %}
+{% endif %}
+
+{% if template == "Відеопрезентації" %}
+   {% include '/common/videos.twig' %}
+{% elseif template == "Партнери" %}
+   {% include '/common/partners.twig' %}
+{% elseif template == "Відомі випускники" %}
+   {% include '/common/graduates.twig' %}
+{% elseif template == "Гордість кафедри" %}
+   {% include '/common/pride-of-the-department.twig' %}
+{% elseif template == "Науково-дослідницькі роботи" %}
+   {% include '/common/research.twig' %}
+{% elseif template == "Загальний перелік монографій" %}
+   {% include '/common/general-lists-of-monographs.twig' %}
+{% else %}
+
+<section>
+    <h1 class="main__title {{icon}}">
+        {{title}}
+    </h1>
+    <div class='main__block main__page'>
+        {{content}}
+
+        {{template}}
+    </div>
+</section>
+
+{% endif %}

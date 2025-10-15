@@ -1,0 +1,79 @@
+{% set name = '' %}
+{% set content = '' %}
+{% set name_en = '' %}
+{% set content_en = '' %}
+
+{% for community in posts %}
+    {% set name = community.name %}
+    {% set content = community.get_field('content') %}
+    
+    {% set name_en = community.get_field('name_en') %}
+    {% set content_en = community.get_field('content_en') %}
+{% endfor %}
+
+<h1 class="main__title">
+    {{ function('get_translation', name, name_en) }}
+</h1>
+
+<section>
+    <div class='main__block main__page'>
+
+        {{ function('get_translation', content, content_en) }}
+
+    </div>
+</section>
+
+<div id="community_id" style='display: none'>{{community_id}}</div>
+
+{% if news_posts|length > 0 %}
+<h1 class="main__title">
+    {{ function('get_translation', "Новини спільноти", "Community news") }}
+</h1>
+
+<div class='main__news'>
+    <div class="news__block">
+        {% for i, news in news_posts %}
+
+            {% if i % 2 == 0 %}
+
+                {% block newsCard %}
+
+                    {% set date = news.get_field('date') %}
+                    {% set title = function('get_translation', news.title_ua, news.title_en) %}
+                    {% set description = function('get_translation', news.description_ua, news.description_en) %}
+                    {% set image = function('wp_get_attachment_image_src', news.image, 'rta_thumb_no_cropped_480x')[0] %}
+                    {% set link = function('get_translation', '', '/en') ~ '/news/' ~ news.slug %}
+
+                    <div class='news-card'>
+                        <div class="news-card__title">
+                            {{title}}
+                            <a class='news-card__link' href='{{link}}'></a>
+                        </div>
+                        <div class="news-card__text">
+                            {{description}}
+
+                            <p class='news-card__date'>
+                                {{date}}
+                            </p>
+                        </div>
+                        <div class="news-card__image">
+                            <img class='loader' src='{{theme_dir}}/images/loader.svg' data-src='{{image}}'>
+                            <img class='loader news-card__bg' src='//:0' data-src='{{image}}'>
+                        </div>
+                    </div>
+
+                {% endblock %}
+
+            {% endif %}
+
+        {% endfor %}
+    </div>
+    <div class="news__block">
+        {% for i, news in news_posts %}
+            {% if i % 2 != 0 %}
+                {{ block('newsCard') }}
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+{% endif %}

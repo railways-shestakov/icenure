@@ -1,0 +1,64 @@
+{% set university = function('get_translation', 'Харківський національний університет радіоелектроніки', 'Kharkiv National University of Radio Electronics') %}
+{% set copyright = function('get_translation', 'Кафедра ІКІ імені В.В. Поповського', 'V.V. Popovskyy Department of Infocommunication Engineering') %}
+
+{% set facebook = 'https://www.facebook.com/ICEKhNURE' %}
+{% set instagram = 'https://www.instagram.com/ice_nure/' %}
+{% set youtube = 'https://www.youtube.com/channel/UCbHGJc4QVanbj50q9eRxPbA' %}
+{% set linkedin = 'https://www.linkedin.com/in/ice-department-nure-0616b7239/' %}
+{% set tiktok = 'https://www.tiktok.com/@ice_nure?_t=8hBdWF8aMRZ&_r=1' %}
+
+<footer class='footer'>
+  <div class='footer__media'>
+    <div class="footer__icon icon">
+      <a class='footer__link' href="{{facebook}}" target='blank'></a>
+      <img src="{{theme_dir}}/images/icons/facebook.png" alt="">
+    </div>
+    <div class="footer__icon icon">
+      <a class='footer__link' href="{{instagram}}" target='blank'></a>
+      <img src="{{theme_dir}}/images/icons/instagram.png" alt="">
+    </div>
+    <div class="footer__icon icon">
+      <a class='footer__link' href="{{youtube}}" target='blank'></a>
+      <img src="{{theme_dir}}/images/icons/youtube.png" alt="">
+    </div>
+    <div class="footer__icon icon">
+      <a class='footer__link' href="{{linkedin}}" target='blank'></a>
+      <img src="{{theme_dir}}/images/icons/linkedin-white.svg" alt="">
+    </div>
+    <div class="footer__icon icon">
+      <a class='footer__link' href="{{tiktok}}" target='blank'></a>
+      <img src="{{theme_dir}}/images/icons/tik-tok.png" alt="">
+    </div>
+  </div>
+  <div>
+    {{copyright}} &copy; 1975-{{function('date', 'Y')}}
+  </div>
+  <div>
+    {{university}}
+  </div>
+  <!--
+  <div class='footer__links'>
+    <a href="https://nure.ua" target="blank">
+      <img src="{{theme_dir}}/images/nure.png" alt=''>
+    </a>
+    <a href="https://mon.gov.ua/ua" target="blank">
+      <img src="{{theme_dir}}/images/mon.png">
+    </a>
+  </div>
+  -->
+  <div style="display: none;">
+    <!-- I.UA counter --><a href="https://www.i.ua/" target="_blank" onclick="this.href='https://i.ua/r.php?223495';" title="Rated by I.UA">
+      <script type="text/javascript"><!--
+      iS='http'+(window.location.protocol=='https:'?'s':'')+
+      '://r.i.ua/s?u223495&p4&n'+Math.random();
+      iD=document;if(!iD.cookie)iD.cookie="b=b; path=/";if(iD.cookie)iS+='&c1';
+      iS+='&d'+(screen.colorDepth?screen.colorDepth:screen.pixelDepth)
+      +"&w"+screen.width+'&h'+screen.height;
+      iT=iR=iD.referrer.replace(iP=/^[a-z]*:\/\//,'');iH=window.location.href.replace(iP,'');
+      ((iI=iT.indexOf('/'))!=-1)?(iT=iT.substring(0,iI)):(iI=iT.length);
+      if(iT!=iH.substring(0,iI))iS+='&f'+escape(iR);
+      iS+='&r'+escape(iH);
+      iD.write('<img src="'+iS+'" border="0" width="88" height="31" />');
+      //--></script></a><!-- End of I.UA counter -->
+  </div>
+</footer>

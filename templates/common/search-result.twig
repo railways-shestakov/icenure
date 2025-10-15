@@ -1,0 +1,31 @@
+{% for news in posts %}
+    {% set date = news.get_field('date') %}
+    {% set title = function('get_translation', news.title_ua, news.title_en) %}
+    {% set description = function('get_translation', news.description_ua, news.description_en) %}
+    {% set image = function('wp_get_attachment_image_src', news.image, 'rta_thumb_no_cropped_480x')[0] %}
+    {% set link = function('get_translation', '', '/en') ~ '/news/' ~ news.slug %}
+
+    {% set size = function('getimagesize', image) %}
+    {% set width = size[0] %}
+    {% set height = size[1] %}
+
+    <div class='news-card'>
+        <div class="news-card__image">
+            <img class='loader' src='{{theme_dir}}/images/loader.svg' data-src='{{image}}'>
+            {# <img class='loader news-card__bg' src='//:0' data-src='{{image}}'> #}
+        </div>
+        <div class="news-card__info">
+            <div class="news-card__title">
+                {{title}}
+                <a class='news-card__link' href='{{link}}'></a>
+            </div>
+            <div class="news-card__text">
+                {{description}}
+
+                <p class='news-card__date'>
+                    {{date}}
+                </p>
+            </div>
+        </div>
+    </div>
+{% endfor %}

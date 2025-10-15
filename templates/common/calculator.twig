@@ -1,0 +1,235 @@
+<style>
+.rows{
+
+}
+
+.row{
+
+}
+
+.field-group{
+    display: flex;
+    flex-direction: column;
+}
+
+.field-group + .field-group{
+    margin: 0 0 0 30px;
+}
+
+.field-group--remove{
+    justify-content: flex-end;
+}
+
+.row + .row,
+.additional-wrapper,
+.result{
+    margin: 30px 0 0;
+}
+
+.controls{
+    margin: 20px 0 0;
+}
+
+.additional-wrapper{
+    display: flex;
+}
+
+.label{
+    margin: 0 0 8px;
+    font-size: 15px;
+}
+
+.label--remove{
+    margin: 0 0 4px;
+    font-weight: 700;
+    text-decoration: underline;
+    color: #536a7b;
+    cursor: pointer;
+}
+
+.label--remove:hover{
+    text-decoration: none;
+}
+
+.input{
+    border-radius: 8px;
+    padding: 6px 8px;
+    border: 1px solid #ddd;
+}
+
+.button{
+    padding: 12px 25px;
+    cursor: pointer;
+    background: #4f718b;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    text-transform: uppercase;
+    transition: background .3s;
+    font-size: 14px;
+}
+
+.button:hover{
+    background: #638cac;
+}
+</style>
+
+<section>
+
+    <h2 class="main__title">
+        {{title}}
+    </h2>
+
+    <section>
+        
+        <div class='main__block main__page'>
+            
+            <div class="rows">
+                <div class="row">
+
+                    <div class="field-group">
+                        <label class="label">
+                            {{ function('get_translation', "Бали за предметом", "Points for subject") }}
+                        </label>
+                        <input
+                            type="number"
+                            placeholder="0-100"
+                            min="0"
+                            max="100"
+                            step="1"
+                            name="points"
+                            class="input"
+                        >
+                    </div>
+
+                    <div class="field-group">
+                        <label class="label">
+                            {{ function('get_translation', "Кількість кредитів", "Number of credits") }}
+                        </label>
+                        <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            step="1"
+                            name="credits"
+                            class="input"
+                        >
+                    </div>
+
+                    <div class="field-group field-group--remove">
+                        <label class="label label--remove">
+                            {{ function('get_translation', "Прибрати рядок", "Remove row") }}
+                        </label>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="additional-wrapper">
+                <div class="field-group">
+                    <label class="label">
+                        {{ function('get_translation', "Додаткові бали", "Additional points") }}
+                    </label>
+                    <input
+                        type="number"
+                        placeholder="0-40"
+                        min="0"
+                        max="40"
+                        step="1"
+                        name="credits"
+                        class="input"
+                    >
+                </div>
+            </div>
+
+            <div class="result">
+                {{ function('get_translation', "Ваш рейтинг", "Your rating") }}:
+                <span>0.00</span>
+            </div>
+
+            <div class="controls">
+                <button class="button">
+                    {{ function('get_translation', "Додати предмет", "Add subject") }}
+                </button>
+            </div>
+
+        </div>
+
+    </section>
+
+</section>
+
+<script>
+const onButtonClick = () => {
+    const container = document.querySelector(".main .rows");
+
+    const html = `
+    <div class="row">
+
+        <div class="field-group">
+            <label class="label">
+                {{ function('get_translation', "Бали за предметом", "Points for subject") }}
+            </label>
+            <input
+                type="number"
+                placeholder="0-100"
+                min="0"
+                max="100"
+                step="1"
+                name="points"
+                class="input"
+            >
+        </div>
+
+        <div class="field-group">
+            <label class="label">
+                {{ function('get_translation', "Кількість кредитів", "Number of credits") }}
+            </label>
+            <input
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                name="credits"
+                class="input"
+            >
+        </div>
+
+        <div class="field-group field-group--remove">
+            <label class="label label--remove">
+                {{ function('get_translation', "Прибрати рядок", "Remove row") }}
+            </label>
+        </div>
+
+    </div>
+    `;
+
+    container.insertAdjacentHTML("beforeEnd", html);
+}
+
+const onInput = () => {
+    alert(2)
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    const button = document.querySelector(".main .button");
+    const inputs = document.querySelectorAll(".main .input");
+
+    button.addEventListener("click", onButtonClick);
+
+    inputs.forEach(input => {
+        const listenerSet = input.getAttribute('data-listener-set');
+
+        if(listenerSet === "true") return
+
+        input.setAttribute('data-listener-set', true);
+        input.addEventListener("input", onInput)
+    })
+});
+
+document.addEventListener("click", (e) => {
+    if(e.target.classList.contains("label--remove")){
+        e.target.parentNode.parentNode.outerHTML = "";
+    }
+})
+</script>

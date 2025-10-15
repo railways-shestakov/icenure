@@ -1,0 +1,16 @@
+{% for lab in posts %}
+    {% set name = function('get_translation', lab.get_field('title_ua'), lab.get_field('title_en')) %}
+    {% set content = function('get_translation', lab.get_field('text_ua'), lab.get_field('text_en')) %}
+    {% set image = function('wp_get_attachment_image_src', lab.image, 'rta_thumb_no_cropped_480x')[0] %}
+
+<h1 class="main__title">
+    {{name}}
+</h1>
+
+<section>
+    <div class="main__block main__page">
+        {{content}}
+    </div>
+</section>
+
+{% endfor %}

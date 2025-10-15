@@ -1,0 +1,63 @@
+<h1 class="main__title{{icon}}">
+   {{title}} — {{ function('get_translation', "Компанії та фірми", "Companies and firms") }}
+</h1>
+
+{% set partners = "" %}
+{% set partners2 = "" %}
+
+{% for page in posts %}
+    {% set partners = page.get_field('partners') %}
+    {% set partners2 = page.get_field('partners_2') %}
+{% endfor %}
+
+<section>
+    <section>
+        <div class='main__block main__page main-partners'>
+            {% for partner in partners %}
+                {% block partners %}
+                    {% set name  = partner.name %}
+                    {% set name_en  = partner.name_en %}
+                    {% set link  = partner.link %}
+                    {% set image  = partner.image %}
+
+                    {% set size = function('getimagesize', image) %}
+                    {% set width = size[0] %}
+                    {% set height = size[1] %}
+
+                    <div class='video'>
+                        <div class="video__image">
+                            {% if link %}
+                                <a href='{{link}}' rel='nofollow' target='blank'>
+                            {% endif %}
+                                <img src='{{theme_dir}}/images/loader.svg' data-src='{{image}}' alt='' {{height > width or height == width ? 'style="max-height: 100%;"' : ''}}>
+                            {% if link %}
+                                </a>
+                            {% endif %}
+                        </div>
+                        <div class="video__title">
+                            {% if link %}
+                                <a href='{{link}}' rel='nofollow' target='blank'>
+                            {% endif %}
+                                {{ function('get_translation', name, name_en) }}
+                            {% if link %}
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endblock %}
+            {% endfor %}
+        </div>
+    </section>
+
+    <h1 class="main__title{{icon}}">
+    {{title}} — {{ function('get_translation', "Вищі навчальні заклади", "Universities") }}
+    </h1>
+
+    <section>
+        <div class='main__block main__page main-partners'>
+            {% for partner in partners2 %}
+                {{ block('partners') }}
+            {% endfor %}
+        </div>
+    </section>
+</section>

@@ -1,0 +1,45 @@
+<h1 class="main__title{{icon}}">
+   {{title}}
+</h1>
+
+{% set humans = "" %}
+
+{% for people in posts %}
+    {% set humans = people.get_field('human') %}
+{% endfor %}
+
+<section>
+    <div class='main__block main__page main-graduates'>
+        {% for human in humans %}
+            {% set name = human.name %}
+            {% set position = human.position %}
+            {% set year = human.year %}
+            {% set link = human.link %}
+            {% set photo = human.photo %}
+            {% set shiftY = human['shift-y'] %}
+
+            {% set size = function('getimagesize', photo) %}
+            {% set width = size[0] %}
+            {% set height = size[1] %}
+
+            <div class="graduate">
+                <div class="graduate__photo">
+                    <a href='{{link}}' target='blank' rel='nofollow'>
+                        <img src='{{theme_dir}}/images/loader.svg' data-src='{{photo}}' alt="" style="{{width > height ? 'max-width: initial; height: 100%;' : ''}}{{shiftY ? "margin-top:" ~ shiftY ~ "%;" : ""}}">
+                    </a>
+                </div>
+                <div class="graduate__name">
+                    <a href='{{link}}' target='blank' rel='nofollow'>
+                        {{name}}
+                    </a>
+                </div>
+                <div class="graduate__year">
+                    {{year ? '(' ~ year ~ ')' : ''}}
+                </div>
+                <div class="graduate__position">
+                    {{position}}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</section>

@@ -1,0 +1,130 @@
+{% set university = function('get_translation', 'Харківський національний університет радіоелектроніки', 'Kharkiv National University of Radio Electronics') %}
+{% set copyright = function('get_translation', 'Кафедра ІКІ імені В.В. Поповського', 'V.V. Popovskyy Department of<br>Infocommunication Engineering') %}
+
+{% set facebook = 'https://www.facebook.com/ICEKhNURE' %}
+{% set instagram = 'https://www.instagram.com/ice_nure/' %}
+{% set youtube = 'https://www.youtube.com/channel/UCbHGJc4QVanbj50q9eRxPbA' %}
+{% set linkedin = 'https://www.linkedin.com/in/ice-department-nure-0616b7239/' %}
+{% set tiktok = 'https://www.tiktok.com/@ice_nure?_t=8hBdWF8aMRZ&_r=1' %}
+
+{% if posts|length %}
+
+<section class="section section--teachers">
+  <h1 class="main__title main__title--row">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 399.478c21.229 0 38.5-17.271 38.5-38.5s-17.271-38.5-38.5-38.5-38.5 17.271-38.5 38.5 17.271 38.5 38.5 38.5zm0-62c12.958 0 23.5 10.542 23.5 23.5s-10.542 23.5-23.5 23.5-23.5-10.542-23.5-23.5 10.542-23.5 23.5-23.5z"></path><path d="M358.733 247.167H311.25v-23.292h-15v23.292h-26.835l17.544-37.181h23.378l10.061 10.06v14.621h15v-20.834l-18.848-18.847h-23.595c9.981-9.669 16.203-23.197 16.203-38.158 0-29.312-23.847-53.159-53.158-53.159s-53.158 23.847-53.158 53.159c0 14.961 6.222 28.489 16.203 38.158H195.45l-18.848 18.847v20.834h15v-14.621l10.061-10.06h23.373l17.544 37.181h-26.83v-23.292h-15v23.292h-47.483v44.689H168.5V512h175V291.856h15.233v-44.689zm-140.891-90.339c0-21.041 17.118-38.159 38.158-38.159 21.04 0 38.158 17.118 38.158 38.159S277.04 194.986 256 194.986s-38.158-17.118-38.158-38.158zm23.78 53.158h28.751l-14.376 30.466-14.375-30.466zM328.5 497h-145v-13.833h66.167v-15H183.5V291.856h145V497zm15.234-220.144H168.267v-14.689h175.467v14.689z"></path><path d="M58.833 0v262.167h81.934v-15H73.833V15h364.334v232.167h-66.934v15h81.934V0z"></path><path d="M113 39.5h135.33v15H113zM113 68.833h258.67v15H113zM297.1 98.17h74.56v15H297.1zM113 98.17h101.9v15H113zM113 127.5h82.89v15H113zM113 156.83h77.957v15H113zM163 186.17h15v15h-15zM113 186.17h15v15h-15zM138 186.17h15v15h-15zM403.35 32.33h15v15h-15zM403.35 57.33h15v15h-15zM403.35 82.33h15V179h-15zM303.5 366.33h15v15h-15zM303.5 416.33h15V485h-15zM303.5 391.33h15v15h-15zM321.03 156.83h50.633v15H321.03zM316.11 127.5h55.56v15h-55.56zM89.67 497H156v15H89.67zM356 497h66.33v15H356z"></path></svg>
+
+    {{ function('get_translation',
+      "Професорсько-викладацький склад",
+      "Teaching staff") }}
+  </h1>
+
+  <div class="slider slider--teachers">
+    {% for teacher in posts %}
+      {% set name = function('get_translation', teacher.get_field('name_ua'), teacher.get_field('name_en')) %}
+      {% set category = teacher.get_field('category') %}
+      {% set image = function('wp_get_attachment_image_src', teacher.image, 'rta_thumb_no_cropped_480x')[0] %}
+      {% set link = function('get_translation', '', '/en') ~ '/teaching-staff/' ~ teacher.slug %}
+
+      {% if category == 'Завідувач кафедри' %}
+        {% set cat = function('get_translation', 'Завідувач кафедри', 'Head of Department') %}
+      {% endif %}
+
+      {% if category == 'Професор кафедри' %}
+        {% set cat = function('get_translation', 'Професор кафедри', 'Professor of the department') %}
+      {% endif %}
+
+      {% if category == 'Доцент кафедри' %}
+        {% set cat = function('get_translation', 'Доцент кафедри', 'Associate Professor') %}
+      {% endif %}
+
+      {% if category == 'Старший викладач' %}
+        {% set cat = function('get_translation', 'Старший викладач', 'Senior Lecturer') %}
+      {% endif %}
+
+      {% if category == 'Асистент кафедри' %}
+        {% set cat = function('get_translation', 'Асистент кафедри', 'Department Assistant') %}
+      {% endif %}
+
+      {% if content|length > 350 %}
+        {% set content = content|slice(0, 350) ~ '...' %}
+      {% endif %}
+
+      {% set size = function('getimagesize', image) %}
+      {% set width = size[0] %}
+      {% set height = size[1] %}
+
+      <div class='slider__item'>
+        <div class='slider__image'>
+          <a href='{{link}}' target='blank'>
+              <img data-lazy='{{image}}' alt="" style="{{width < height ? 'max-height: initial; max-width: 100%;' : ''}}" data-shift-x="{{shiftX ? shiftX : ""}}">
+          </a>
+        </div>
+        <div>
+          <div class='slider__title'>
+            <a href='{{link}}' target='blank'>
+              {{name|replace({' ': "<br>"})}}
+            </a>
+            <div class='slider__position'>
+              {{cat}}
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+</section>
+
+{% endif %}
+
+<footer class='footer'>
+  <div class="footer__inner">
+    <div class='footer__media'>
+      <div class="footer__icon icon">
+        <a class='footer__link' href="{{facebook}}" target='blank'></a>
+        <img src="{{theme_dir}}/images/icons/facebook.png" alt="">
+      </div>
+      <div class="footer__icon icon">
+        <a class='footer__link' href="{{instagram}}" target='blank'></a>
+        <img src="{{theme_dir}}/images/icons/instagram.png" alt="">
+      </div>
+      <div class="footer__icon icon">
+        <a class='footer__link' href="{{youtube}}" target='blank'></a>
+        <img src="{{theme_dir}}/images/icons/youtube.png" alt="">
+      </div>
+      <div class="footer__icon icon">
+        <a class='footer__link' href="{{linkedin}}" target='blank'></a>
+        <img src="{{theme_dir}}/images/icons/linkedin-white.svg" alt="">
+      </div>
+      <div class="footer__icon icon">
+        <a class='footer__link' href="{{tiktok}}" target='blank'></a>
+        <img src="{{theme_dir}}/images/icons/tik-tok.png" alt="">
+      </div>
+    </div>
+    <div>
+      {{copyright}} &copy; 1975-{{function('date', 'Y')}}
+    </div>
+    <div class='footer__links'>
+      <!-- I.UA counter --><a href="https://www.i.ua/" target="_blank" onclick="this.href='https://i.ua/r.php?223495';" title="Rated by I.UA">
+      <script type="text/javascript"><!--
+      iS='http'+(window.location.protocol=='https:'?'s':'')+
+      '://r.i.ua/s?u223495&p4&n'+Math.random();
+      iD=document;if(!iD.cookie)iD.cookie="b=b; path=/";if(iD.cookie)iS+='&c1';
+      iS+='&d'+(screen.colorDepth?screen.colorDepth:screen.pixelDepth)
+      +"&w"+screen.width+'&h'+screen.height;
+      iT=iR=iD.referrer.replace(iP=/^[a-z]*:\/\//,'');iH=window.location.href.replace(iP,'');
+      ((iI=iT.indexOf('/'))!=-1)?(iT=iT.substring(0,iI)):(iI=iT.length);
+      if(iT!=iH.substring(0,iI))iS+='&f'+escape(iR);
+      iS+='&r'+escape(iH);
+      iD.write('<img src="'+iS+'" border="0" width="88" height="31" />');
+      //--></script></a><!-- End of I.UA counter -->
+      <a href="https://nure.ua" target="blank">
+        <img src="{{theme_dir}}/images/nure.png" alt=''>
+      </a>
+      <a href="https://mon.gov.ua/ua" target="blank">
+        <img src="{{theme_dir}}/images/mon.png">
+      </a>
+    </div>
+  </div>
+</footer>
+<div class='scrollTop js-scrollTop'></div>

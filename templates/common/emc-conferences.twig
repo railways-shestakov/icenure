@@ -1,0 +1,38 @@
+<section>
+
+    <h2 class="main__title main__title--aside">
+        {{
+            function('get_translation',
+            " МНТК «Інформаційно-комунікаційні технології та кібербезпека»",
+            "ISTC «Information and communication technologies and cyber security»")
+        }}
+    </h2>
+
+    <section>
+        {% for emc_conference in posts %}
+            {% set year = emc_conference.get_field('year') %}
+            {% set link = function('get_translation', '/ua', '/en') ~ '/emc-conferences/' ~ emc_conference.slug %}
+            {% set title = function('get_translation', 'EMC конференція — ' ~ year ~ ' рік', 'EMC conference — ' ~ year ~ ' year') %}
+
+            {% if year >= 2023 %}
+                {% set title = function('get_translation',
+                'ІКТК конференція — ' ~ year ~ ' рік',
+                'ІКТК conference — ' ~ year ~ ' year') %}
+            {% endif %}
+
+            <div class="main__block">
+                <div class="row">
+                    <div>
+                        <div class="row__name" style="margin: 0;">
+                            <a href='{{link}}'>
+                                {{title}}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        {% endfor %}
+    </section>
+
+</section>

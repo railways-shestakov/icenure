@@ -1,0 +1,88 @@
+{% set goalImages = {
+    '1': 'https://ice.nure.ua/wp-content/uploads/2025/02/SDG-1_Ukrainian.svg_.png',
+    '2': 'https://ice.nure.ua/wp-content/uploads/2025/02/SDG-2_Ukrainian.svg_.png',
+    '3': 'https://ice.nure.ua/wp-content/uploads/2025/02/SDG-3_Ukrainian.svg_.png',
+    '4': 'https://ice.nure.ua/wp-content/uploads/2025/02/SDG-4_Ukrainian.svg_.png',
+    '5': 'https://ice.nure.ua/wp-content/uploads/2025/02/SDG-5_Ukrainian.svg_.png',
+    '6': 'https://ice.nure.ua/wp-content/uploads/2025/02/SDG-6_Ukrainian.svg_.png',
+    '7': 'https://ice.nure.ua/wp-content/uploads/2025/02/SDG-7_Ukrainian.svg_.png',
+    '8': 'https://ice.nure.ua/wp-content/uploads/2025/02/SDG-8_Ukrainian.svg_.png',
+    '9': 'https://ice.nure.ua/wp-content/uploads/2025/02/SDG-9_Ukrainian.svg_.png',
+    '10': 'https://ice.nure.ua/wp-content/uploads/2025/02/SDG-10_Ukrainian.svg_.png',
+    '11': 'https://ice.nure.ua/wp-content/uploads/2025/02/SDG-11_Ukrainian.svg_.png',
+    '12': 'https://ice.nure.ua/wp-content/uploads/2025/02/SDG-12_Ukrainian.svg_.png',
+    '13': 'https://ice.nure.ua/wp-content/uploads/2025/02/SDG-13_Ukrainian.svg_.png',
+    '14': 'https://ice.nure.ua/wp-content/uploads/2025/02/SDG-14_Ukrainian.svg_.png',
+    '15': 'https://ice.nure.ua/wp-content/uploads/2025/02/SDG-15_Ukrainian.svg_.png',
+    '16': 'https://ice.nure.ua/wp-content/uploads/2025/02/SDG-16_Ukrainian.svg_.png',
+    '17': 'https://ice.nure.ua/wp-content/uploads/2025/02/SDG-17_Ukrainian.svg_.png',
+} %}
+{% set title = function('get_translation', 'Новина', 'News') %}
+<section>
+    <h1 class="main__title">
+        {{title}}
+    </h1>
+
+    {% for news in posts %}
+        {% set title = function('get_translation', news.title_ua, news.title_en) %}
+        {% set text = function('get_translation', news.text_ua, news.text_en) %}
+        {% set text = function('do_shortcode', text) %}
+        {% set image = function('wp_get_attachment_image_src', news.image, 'full')[0] %}
+        {% set goal = news.goal %}
+        {% set goals = "" %}
+
+        {% if goal %}
+            {% if goal is iterable %}
+                {% set goals = goal %}
+            {% else %}
+                {% set goals = goal|split(',') %}
+            {% endif %}
+        {% endif %}
+        <div class='news-card news-card-full'>
+            <h2 class="news-card__title">
+                {{title}}
+            </h2>
+            <div class="news-card__text">
+                {{text}}
+
+                {% if goals %}
+                    <p>
+                        Ця активність відповідає наступним цілям сталого розвитку:
+                    </p>
+                {%  endif %}
+
+                <div class="goal-images">
+                    {% for item in goals %}
+                        {% set parts = item|split('.') %}
+                        {% set number = parts[0]|trim %}
+                        {% if goalImages[number] is defined %}
+                            <img class="goal-image" src="{{ goalImages[number] }}" alt="Goal {{ number }}">
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</section>
+
+<style>
+    .goal-images{
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        margin: 0 0 20px;
+    }
+
+    @media (min-width: 768px){
+        .goal-images{
+            grid-template-columns: repeat(8, 1fr);
+        }
+    }
+
+    .goal-image{
+        max-width: 100%;
+    }
+
+    .goal-image{
+        max-width: 170px;
+    }
+</style>
