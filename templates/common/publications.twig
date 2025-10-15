@@ -70,9 +70,9 @@
 
         {% if normalizedQuartile == 'Q1' %}
             {% set quartileQ1Len = quartileQ1Len + 1 %}
+            {% set quartileQ12Len = quartileQ12Len + 1 %}
         {% elseif normalizedQuartile == 'Q2' %}
             {% set quartileQ2Len = quartileQ2Len + 1 %}
-        {% elseif normalizedQuartile == 'Q1/Q2' %}
             {% set quartileQ12Len = quartileQ12Len + 1 %}
         {% endif %}
 
