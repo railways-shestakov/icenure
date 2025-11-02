@@ -275,13 +275,40 @@ function onWindowScroll(){
       if(ifMobile){
         $('.main__news')[0].insertAdjacentHTML('beforeEnd', html);
       }else{
-        let leftBlock = $(div).find('.news__block:nth-child(1)')[0];
-        let rightBlock = $(div).find('.news__block:nth-child(2)')[0];
-        let leftHTML = leftBlock.innerHTML;
-        let rightHTML = rightBlock.innerHTML;
-        
-        $('.news__block:nth-child(1)')[0].insertAdjacentHTML('beforeEnd', leftHTML);
-        $('.news__block:nth-child(2)')[0].insertAdjacentHTML('beforeEnd', rightHTML);
+        const targetColumns = Array.from(document.querySelectorAll('.news__block'));
+        const sourceColumns = Array.from($(div).find('.news__block'));
+
+        if(targetColumns.length < 2 || sourceColumns.length < 2){
+          sourceColumns.forEach((column, index) => {
+            if(targetColumns[index]){
+              targetColumns[index].insertAdjacentHTML('beforeEnd', column.innerHTML);
+            }
+          });
+        }else{
+          const newItems = [];
+
+          sourceColumns.forEach((column) => {
+            Array.from(column.children).forEach((child) => {
+              newItems.push(child);
+            });
+          });
+
+          newItems.forEach((item) => {
+            const firstColumn = targetColumns[0];
+            const secondColumn = targetColumns[1];
+
+            if(!firstColumn || !secondColumn){
+              if(firstColumn) firstColumn.appendChild(item);
+              return;
+            }
+
+            const firstHeight = firstColumn.getBoundingClientRect().height;
+            const secondHeight = secondColumn.getBoundingClientRect().height;
+            const destination = firstHeight <= secondHeight ? firstColumn : secondColumn;
+
+            destination.appendChild(item);
+          });
+        }
       }
 
       offset += postsNumber;
