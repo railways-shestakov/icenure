@@ -119,7 +119,7 @@
 
       <div class="popup__number">
 
-        <div class="popup__number-digit" data-max="16">
+        <div class="popup__number-digit" data-max="10">
           0
         </div>
 
