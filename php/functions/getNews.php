@@ -58,7 +58,7 @@ switch($categoryInt){
     $category = "Про нас пишуть";
   break;
   case 13:
-    $category = "Про нас пишуть";
+    $category = "Програми обміну та подвійних дипломів";
   break;
   case 14:
     $category = "Екскурсії та подорожі студентів";
