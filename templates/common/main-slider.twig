@@ -1,3 +1,23 @@
+{% set slides = function('get_field', 'slider_slides', 'option') %}
+
+{% if slides %}
+
+<div class="slider slider--main">
+    {% for slide in slides %}
+        <div class='slider__item'>
+            <div class='slider__image'{% if slide.image_wrapper_style %} style="{{ slide.image_wrapper_style }}"{% endif %}>
+                {% set image = function('get_translation', slide.image_ua, slide.image_en ? slide.image_en : slide.image_ua) %}
+                <img data-lazy='{{ image }}' alt=""{% if slide.image_style %} style="{{ slide.image_style }}"{% endif %}>
+            </div>
+            <div>
+                {{ function('get_translation', slide.text_ua, slide.text_en ? slide.text_en : slide.text_ua)|raw }}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+{% else %}
+
 <div class="slider slider--main">
     <div class='slider__item'>
         <div class='slider__image'>
@@ -22,7 +42,7 @@
             <img data-lazy='{{ function('get_translation', '/wp-content/themes/nure/images/banners/banner-3.jpg', '/wp-content/themes/nure/images/banners/banner-3-en.jpg') }}' alt="">
         </div>
         <div>
-            {{ function('get_translation', 'Кафедра ІКІ носить ім’я Володимира Володимировича Поповського, який її очолював з 1992 по 2018 рр. За цей час під його керівництвом кардинально оновлена та осучаснена лабораторна база кафедри (12 нових лабораторій та центрів); він створив та очолив наукову школу – захищено 10 докторських та понад 50 кандидатських дисертацій; видано 7 монографій, більше 200 статей та понад 300 доповідей на конференціях. Виконано більше 20 НДР.',
+            {{ function('get_translation', 'Кафедра ІКІ носить ім'я Володимира Володимировича Поповського, який її очолював з 1992 по 2018 рр. За цей час під його керівництвом кардинально оновлена та осучаснена лабораторна база кафедри (12 нових лабораторій та центрів); він створив та очолив наукову школу – захищено 10 докторських та понад 50 кандидатських дисертацій; видано 7 монографій, більше 200 статей та понад 300 доповідей на конференціях. Виконано більше 20 НДР.',
             'The ICE Department was named after Volodymyr Popovskyy who led it from 1992 till 2018. During this period, under his leadership the laboratory base of the Department was cardinally renovated and updated (12 new laboratories and centers). He created and led a scientific school – 10 doctoral and more than 50 PhD theses were defended. There were published 7 monographs, more than 200 articles and more than 300 conference reports. More than 20 R&amp;D works were completed.') }}
         </div>
     </div>
@@ -46,3 +66,5 @@
         </div>
     </div>
 </div>
+
+{% endif %}
