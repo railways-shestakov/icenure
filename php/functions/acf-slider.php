@@ -3,24 +3,58 @@
  * ACF Options Page and Field Group for Main Slider
  */
 
-if ( ! function_exists('acf_add_options_page') ) {
-    return;
+add_action('acf/init', 'register_slider_fields');
+
+/**
+ * Register the slider admin page.
+ * Falls back to WordPress core add_menu_page() if ACF Pro is not available.
+ */
+add_action('admin_menu', 'register_slider_admin_page', 99);
+
+function register_slider_admin_page() {
+    global $admin_page_hooks;
+    if ( isset($admin_page_hooks['slider-settings']) ) {
+        return;
+    }
+
+    add_menu_page(
+        'Налаштування слайдера',
+        'Слайдер',
+        'edit_posts',
+        'slider-settings',
+        'render_slider_settings_page',
+        'dashicons-images-alt2',
+        30
+    );
 }
 
-acf_add_options_page(array(
-    'page_title' => 'Налаштування слайдера',
-    'menu_title' => 'Слайдер',
-    'menu_slug'  => 'slider-settings',
-    'capability' => 'edit_posts',
-    'icon_url'   => 'dashicons-images-alt2',
-    'position'   => 30,
-));
+function render_slider_settings_page() {
+    echo '<div class="wrap">';
+    echo '<h1>Налаштування слайдера</h1>';
 
-add_action('acf/init', 'register_slider_fields');
+    if ( ! function_exists('acf_add_options_page') ) {
+        echo '<div class="notice notice-warning"><p>';
+        echo 'Для повної функціональності цієї сторінки необхідний плагін <strong>Advanced Custom Fields PRO</strong>.';
+        echo '</p></div>';
+    }
+
+    echo '</div>';
+}
 
 function register_slider_fields() {
     if ( ! function_exists('acf_add_local_field_group') ) {
         return;
+    }
+
+    if ( function_exists('acf_add_options_page') ) {
+        acf_add_options_page(array(
+            'page_title' => 'Налаштування слайдера',
+            'menu_title' => 'Слайдер',
+            'menu_slug'  => 'slider-settings',
+            'capability' => 'edit_posts',
+            'icon_url'   => 'dashicons-images-alt2',
+            'position'   => 30,
+        ));
     }
 
     acf_add_local_field_group(array(

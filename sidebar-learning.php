@@ -1,3 +1,9 @@
+<?php $acf_sidebar_content = render_sidebar_links('learning'); ?>
+<?php if ($acf_sidebar_content): ?>
+<div class="main__sidebar">
+    <?= $acf_sidebar_content ?>
+</div>
+<?php else: ?>
 <div class="main__sidebar">
     <div class="sidebar__block">
         <a href="/learning-process/teaching-staff">
@@ -76,3 +82,4 @@
         </a>
     </div>
 </div>
+<?php endif; ?>
