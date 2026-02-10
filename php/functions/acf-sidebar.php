@@ -5,12 +5,11 @@
  */
 
 /**
- * Get sidebar definitions (key => label).
- * Single source of truth for all sidebar types.
+ * Built-in sidebar definitions.
  *
- * @return array Associative array of sidebar_key => label
+ * @return array
  */
-function get_sidebar_definitions() {
+function get_builtin_sidebar_definitions() {
     return array(
         'students' => 'Студентська робота',
         'about'    => 'Про кафедру',
@@ -19,6 +18,21 @@ function get_sidebar_definitions() {
         'news'     => 'Новини',
         'entrants' => 'Абітурієнту',
     );
+}
+
+/**
+ * Get all sidebar definitions (built-in + custom).
+ * Single source of truth for all sidebar types.
+ *
+ * @return array Associative array of sidebar_key => label
+ */
+function get_sidebar_definitions() {
+    $built_in = get_builtin_sidebar_definitions();
+    $custom   = get_option('icenure_custom_sidebars', array());
+    if ( ! is_array($custom) ) {
+        $custom = array();
+    }
+    return array_merge($built_in, $custom);
 }
 
 /* ───────────────────────────────────────────────
@@ -49,53 +63,87 @@ function sidebar_admin_enqueue($hook) {
 }
 
 /* ───────────────────────────────────────────────
- * Save handler
+ * Save handlers
  * ─────────────────────────────────────────────── */
 
 add_action('admin_init', 'handle_sidebar_settings_save');
 
 function handle_sidebar_settings_save() {
-    if ( ! isset($_POST['sidebar_settings_nonce']) ) {
-        return;
-    }
-    if ( ! wp_verify_nonce($_POST['sidebar_settings_nonce'], 'save_sidebar_settings') ) {
-        wp_die('Помилка безпеки.');
-    }
-    if ( ! current_user_can('edit_posts') ) {
-        return;
-    }
-
-    $sidebar_key = sanitize_key($_POST['sidebar_key']);
-    $definitions = get_sidebar_definitions();
-    if ( ! isset($definitions[$sidebar_key]) ) {
-        return;
-    }
-
-    $links = array();
-    if ( ! empty($_POST['links']) && is_array($_POST['links']) ) {
-        foreach ( $_POST['links'] as $link_data ) {
-            if ( empty($link_data['title_ua']) ) {
-                continue;
+    /* ── Save links ── */
+    if ( isset($_POST['sidebar_settings_nonce']) &&
+         wp_verify_nonce($_POST['sidebar_settings_nonce'], 'save_sidebar_settings') &&
+         current_user_can('edit_posts')
+    ) {
+        $sidebar_key = sanitize_key($_POST['sidebar_key']);
+        $definitions = get_sidebar_definitions();
+        if ( isset($definitions[$sidebar_key]) ) {
+            $links = array();
+            if ( ! empty($_POST['links']) && is_array($_POST['links']) ) {
+                foreach ( $_POST['links'] as $link_data ) {
+                    if ( empty($link_data['title_ua']) ) {
+                        continue;
+                    }
+                    $is_section = ! empty($link_data['is_section_header']) ? 1 : 0;
+                    $links[] = array(
+                        'url'               => $is_section ? '' : sanitize_text_field(wp_unslash($link_data['url'])),
+                        'title_ua'          => sanitize_text_field(wp_unslash($link_data['title_ua'])),
+                        'title_en'          => sanitize_text_field(wp_unslash($link_data['title_en'])),
+                        'svg_icon'          => wp_unslash(trim($link_data['svg_icon'])),
+                        'is_section_header' => $is_section,
+                    );
+                }
             }
-            $is_section = ! empty($link_data['is_section_header']) ? 1 : 0;
-            $links[] = array(
-                'url'               => $is_section ? '' : sanitize_text_field(wp_unslash($link_data['url'])),
-                'title_ua'          => sanitize_text_field(wp_unslash($link_data['title_ua'])),
-                'title_en'          => sanitize_text_field(wp_unslash($link_data['title_en'])),
-                'svg_icon'          => wp_unslash(trim($link_data['svg_icon'])),
-                'is_section_header' => $is_section,
-            );
+            update_option('icenure_sidebar_' . $sidebar_key . '_links', $links);
         }
+        wp_redirect(add_query_arg(array(
+            'page' => 'sidebar-settings', 'tab' => $sidebar_key, 'updated' => '1',
+        ), admin_url('admin.php')));
+        exit;
     }
 
-    update_option('icenure_sidebar_' . $sidebar_key . '_links', $links);
+    /* ── Add new sidebar ── */
+    if ( isset($_POST['add_sidebar_nonce']) &&
+         wp_verify_nonce($_POST['add_sidebar_nonce'], 'add_sidebar') &&
+         current_user_can('edit_posts')
+    ) {
+        $new_key   = sanitize_key($_POST['new_sidebar_key']);
+        $new_label = sanitize_text_field(wp_unslash($_POST['new_sidebar_label']));
 
-    wp_redirect(add_query_arg(array(
-        'page'    => 'sidebar-settings',
-        'tab'     => $sidebar_key,
-        'updated' => '1',
-    ), admin_url('admin.php')));
-    exit;
+        if ( $new_key && $new_label ) {
+            $all = get_sidebar_definitions();
+            if ( ! isset($all[$new_key]) ) {
+                $custom = get_option('icenure_custom_sidebars', array());
+                if ( ! is_array($custom) ) $custom = array();
+                $custom[$new_key] = $new_label;
+                update_option('icenure_custom_sidebars', $custom);
+            }
+        }
+        wp_redirect(add_query_arg(array(
+            'page' => 'sidebar-settings', 'tab' => $new_key,
+        ), admin_url('admin.php')));
+        exit;
+    }
+
+    /* ── Delete custom sidebar ── */
+    if ( isset($_POST['delete_sidebar_nonce']) &&
+         wp_verify_nonce($_POST['delete_sidebar_nonce'], 'delete_sidebar') &&
+         current_user_can('edit_posts')
+    ) {
+        $del_key  = sanitize_key($_POST['delete_sidebar_key']);
+        $built_in = get_builtin_sidebar_definitions();
+        if ( ! isset($built_in[$del_key]) ) {
+            $custom = get_option('icenure_custom_sidebars', array());
+            if ( is_array($custom) ) {
+                unset($custom[$del_key]);
+                update_option('icenure_custom_sidebars', $custom);
+            }
+            delete_option('icenure_sidebar_' . $del_key . '_links');
+        }
+        wp_redirect(add_query_arg(array(
+            'page' => 'sidebar-settings',
+        ), admin_url('admin.php')));
+        exit;
+    }
 }
 
 /* ───────────────────────────────────────────────
@@ -104,6 +152,7 @@ function handle_sidebar_settings_save() {
 
 function render_sidebar_settings_page() {
     $definitions = get_sidebar_definitions();
+    $built_in    = get_builtin_sidebar_definitions();
     $keys        = array_keys($definitions);
     $active_tab  = isset($_GET['tab']) && isset($definitions[$_GET['tab']])
         ? sanitize_key($_GET['tab'])
@@ -113,6 +162,8 @@ function render_sidebar_settings_page() {
     if ( $links === null ) {
         $links = array();
     }
+
+    $is_custom = ! isset($built_in[$active_tab]);
     ?>
     <div class="wrap">
         <h1>Налаштування бічних панелей</h1>
@@ -121,7 +172,7 @@ function render_sidebar_settings_page() {
             <div class="notice notice-success is-dismissible"><p>Налаштування збережено.</p></div>
         <?php endif; ?>
 
-        <nav class="nav-tab-wrapper" style="margin-bottom:15px">
+        <nav class="nav-tab-wrapper" style="margin-bottom:0">
             <?php foreach ( $definitions as $key => $label ): ?>
                 <a href="<?php echo esc_url(add_query_arg(array('page' => 'sidebar-settings', 'tab' => $key), admin_url('admin.php'))); ?>"
                    class="nav-tab <?php echo $key === $active_tab ? 'nav-tab-active' : ''; ?>">
@@ -130,9 +181,33 @@ function render_sidebar_settings_page() {
             <?php endforeach; ?>
         </nav>
 
-        <p class="description" style="margin-bottom:12px">
-            Якщо список порожній — використовуються стандартні посилання з коду.
-            Додайте хоча б одне посилання, щоб замінити стандартні.
+        <!-- Add new sidebar -->
+        <div class="add-sidebar-bar">
+            <form method="post" action="" class="add-sidebar-form">
+                <?php wp_nonce_field('add_sidebar', 'add_sidebar_nonce'); ?>
+                <input type="text" name="new_sidebar_key" placeholder="Ключ (латиницею)" required
+                       pattern="[a-z0-9_-]+" title="Тільки латинські літери, цифри, дефіс, підкреслення">
+                <input type="text" name="new_sidebar_label" placeholder="Назва" required>
+                <button type="submit" class="button">+ Нова панель</button>
+            </form>
+        </div>
+
+        <?php if ( $is_custom ): ?>
+            <form method="post" action="" style="display:inline">
+                <?php wp_nonce_field('delete_sidebar', 'delete_sidebar_nonce'); ?>
+                <input type="hidden" name="delete_sidebar_key" value="<?php echo esc_attr($active_tab); ?>">
+                <div class="notice notice-warning" style="margin:12px 0 0;display:flex;align-items:center;justify-content:space-between">
+                    <p>Це користувацька бічна панель.</p>
+                    <button type="submit" class="button button-link-delete"
+                            onclick="return confirm('Видалити панель «<?php echo esc_js($definitions[$active_tab]); ?>» та всі її посилання?')">
+                        Видалити панель
+                    </button>
+                </div>
+            </form>
+        <?php endif; ?>
+
+        <p class="description" style="margin:12px 0">
+            Дані заповнені автоматично з існуючих шаблонів. Редагуйте та натисніть «Зберегти зміни».
         </p>
 
         <form method="post" action="">
@@ -173,13 +248,15 @@ function render_sidebar_settings_page() {
         .sidebar-link-fields .field textarea{width:100%}
         .section-header-check{display:flex;align-items:center;gap:6px;font-size:13px}
         .section-header-check input{margin:0}
+        .add-sidebar-bar{background:#fff;border:1px solid #ccd0d4;border-top:0;padding:8px 12px;margin-bottom:15px}
+        .add-sidebar-form{display:flex;align-items:center;gap:8px}
+        .add-sidebar-form input[type="text"]{padding:4px 8px;height:30px}
     </style>
 
     <script>
     jQuery(function($){
         var idx = <?php echo count($links); ?>;
 
-        /* Sortable */
         $('#sidebar-links-container').sortable({
             items: '.sidebar-link-item',
             handle: '.sidebar-link-header',
@@ -189,7 +266,6 @@ function render_sidebar_settings_page() {
             stop: function(){ updateNumbers(); }
         });
 
-        /* Add row */
         $('#add-sidebar-link').on('click', function(){
             var html = $('#sidebar-link-template').html().replace(/__INDEX__/g, idx);
             $('#sidebar-links-container').append(html);
@@ -198,17 +274,14 @@ function render_sidebar_settings_page() {
             $('#sidebar-links-container').sortable('refresh');
         });
 
-        /* Remove row */
         $(document).on('click', '.remove-sidebar-link', function(){
             $(this).closest('.sidebar-link-item').remove();
             updateNumbers();
         });
 
-        /* Toggle URL/SVG fields for section headers */
         $(document).on('change', '.is-section-header-cb', function(){
             var item = $(this).closest('.sidebar-link-item');
-            var hide = this.checked;
-            item.find('.url-field-wrap, .svg-field-wrap').toggle(!hide);
+            item.find('.url-field-wrap, .svg-field-wrap').toggle(!this.checked);
         });
 
         function updateNumbers(){
@@ -273,18 +346,26 @@ function render_sidebar_link_row($index, $link) {
  * ─────────────────────────────────────────────── */
 
 /**
- * Get sidebar links from WordPress options.
- * Returns array of links or null if none configured.
+ * Get sidebar links.
+ * Priority: saved options → parsed defaults from sidebar template file.
+ * Returns null only if neither source has data.
  *
  * @param string $sidebar_key Sidebar identifier
  * @return array|null
  */
 function get_sidebar_links($sidebar_key) {
     $links = get_option('icenure_sidebar_' . $sidebar_key . '_links');
-    if ( empty($links) || ! is_array($links) ) {
-        return null;
+    if ( ! empty($links) && is_array($links) ) {
+        return $links;
     }
-    return $links;
+
+    // Fall back to parsed data from hardcoded sidebar template
+    $parsed = parse_sidebar_file($sidebar_key);
+    if ( ! empty($parsed) ) {
+        return $parsed;
+    }
+
+    return null;
 }
 
 /**
@@ -345,7 +426,7 @@ function render_sidebar_links($sidebar_key) {
 }
 
 /* ───────────────────────────────────────────────
- * Parser & seeder (populates from hardcoded HTML)
+ * Parser (extracts link data from sidebar HTML)
  * ─────────────────────────────────────────────── */
 
 /**
@@ -399,34 +480,6 @@ function parse_sidebar_file($sidebar_key) {
 
     return $items;
 }
-
-/**
- * Seed sidebar options with default items parsed from hardcoded HTML.
- * Runs once on admin_init.
- */
-function seed_sidebar_defaults() {
-    if ( get_option('icenure_sidebar_defaults_seeded') ) {
-        return;
-    }
-
-    $sidebars = get_sidebar_definitions();
-
-    foreach ( $sidebars as $key => $label ) {
-        $existing = get_option('icenure_sidebar_' . $key . '_links');
-        if ( ! empty($existing) ) {
-            continue;
-        }
-
-        $items = parse_sidebar_file($key);
-        if ( ! empty($items) ) {
-            update_option('icenure_sidebar_' . $key . '_links', $items);
-        }
-    }
-
-    update_option('icenure_sidebar_defaults_seeded', true);
-}
-
-add_action('admin_init', 'seed_sidebar_defaults');
 
 /* ───────────────────────────────────────────────
  * Universal Page integration (works with ACF free)
