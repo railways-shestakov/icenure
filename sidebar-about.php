@@ -1,3 +1,9 @@
+<?php $acf_sidebar_content = render_sidebar_links('about'); ?>
+<?php if ($acf_sidebar_content): ?>
+<div class="main__sidebar">
+    <?= $acf_sidebar_content ?>
+</div>
+<?php else: ?>
 <div class="main__sidebar">
     <div class="sidebar__block">
         <a href="/about">
@@ -46,3 +52,4 @@
         </a>
     </div>
 </div>
+<?php endif; ?>

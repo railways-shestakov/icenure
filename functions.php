@@ -10,6 +10,9 @@ add_action('init', 'admin_bar' );
 // ACF Slider Options Page
 include_once get_template_directory() . '/php/functions/acf-slider.php';
 
+// ACF Sidebar Management
+include_once get_template_directory() . '/php/functions/acf-sidebar.php';
+
 add_action( 'wp_before_admin_bar_render', function() {
   global $wp_admin_bar;
   $wp_admin_bar->remove_menu('trp_edit_translation');
