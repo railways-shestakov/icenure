@@ -192,12 +192,16 @@
             {% endfor %}
         </select>
 
-        <div style="float: right;">
+        <div style="float: right; text-align: right;">
             <a id="lll" style="color: #2f536d; font-size: 16px;" href="https://ice.nure.ua/wp-content/uploads/2023/02/Polozhennia_pro_konkurs_Studenty_vidminnyky_kafedry_IKI_imeni_V_V.pdf" target="_blank">
-                «Положення про конкурс Студенти-відмінники»
+                «{{ function('get_translation', 'Положення про конкурс Студенти-відмінники', 'Regulations on the competition Distinguished Students') }}»
+            </a>
+            <br>
+            <a id="lll2" style="color: #2f536d; font-size: 16px;" href="/best-students-stypendiaty-akademichnykh-stypendij-prezydenta-ukrainy-verkhovnoi-rady-ukrainy-ta-kabinetu-ministriv-ukrainy/">
+                {{ function('get_translation', 'Стипендіати акад. стипендій Пр. України, ВРУ та КМУ', 'Scholarship recipients of the President, VRU and CMU') }}
             </a>
             <style>
-            #lll:hover{
+            #lll:hover, #lll2:hover{
                 text-decoration: underline;
             }
             </style>
