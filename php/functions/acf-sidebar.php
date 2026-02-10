@@ -86,8 +86,17 @@ function register_sidebar_fields() {
                     'name'         => 'url',
                     'type'         => 'text',
                     'instructions' => 'Наприклад: /educational-and-scientific-achievements',
-                    'required'     => 1,
+                    'required'     => 0,
                     'placeholder'  => '/url-address',
+                    'conditional_logic' => array(
+                        array(
+                            array(
+                                'field' => 'field_sidebar_' . $sidebar['key'] . '_link_is_section',
+                                'operator' => '!=',
+                                'value' => '1',
+                            ),
+                        ),
+                    ),
                 ),
                 array(
                     'key'          => 'field_sidebar_' . $sidebar['key'] . '_link_title_ua',
@@ -224,4 +233,91 @@ function render_sidebar_links($sidebar_key) {
 
     return $output;
 }
+
+/**
+ * Parse a sidebar-{key}.php file and extract link data from hardcoded HTML.
+ *
+ * @param string $sidebar_key Sidebar identifier
+ * @return array Array of link items with url, title_ua, title_en, svg_icon, is_section_header
+ */
+function parse_sidebar_file($sidebar_key) {
+    $file = get_template_directory() . '/sidebar-' . $sidebar_key . '.php';
+    if ( ! file_exists($file) ) {
+        return array();
+    }
+
+    $content = file_get_contents($file);
+
+    // Remove HTML comments (skip commented-out links like calculator)
+    $content = preg_replace('/<!--[\s\S]*?-->/', '', $content);
+
+    // Extract fallback section (between else: and endif:)
+    if ( preg_match('/else\s*:\s*\?>([\s\S]*?)<\?php\s+endif/i', $content, $fallback_match) ) {
+        $html = $fallback_match[1];
+    } else {
+        $html = $content;
+    }
+
+    $items = array();
+
+    // Combined regex: match h3 section headers OR a links with SVG and get_translation
+    $pattern = '/(?:<h3>\s*<\?=\s*get_translation\(\s*\'([^\']*)\'\s*,\s*\'([^\']*)\'\s*\)\s*;?\s*\?>\s*<\/h3>)|(?:<a\s+href="([^"]+)">\s*((?:<svg[\s\S]*?<\/svg>)?\s*)<\?=\s*get_translation\(\s*\'([^\']*)\'\s*,\s*\'([^\']*)\'\s*\)\s*;?\s*\?>\s*<\/a>)/i';
+
+    if ( preg_match_all($pattern, $html, $matches, PREG_SET_ORDER) ) {
+        foreach ($matches as $m) {
+            if ( ! empty($m[1]) ) {
+                // h3 section header
+                $items[] = array(
+                    'url'               => '',
+                    'title_ua'          => $m[1],
+                    'title_en'          => $m[2],
+                    'svg_icon'          => '',
+                    'is_section_header' => 1,
+                );
+            } else {
+                // a link
+                $items[] = array(
+                    'url'               => $m[3],
+                    'title_ua'          => $m[5],
+                    'title_en'          => $m[6],
+                    'svg_icon'          => trim($m[4]),
+                    'is_section_header' => 0,
+                );
+            }
+        }
+    }
+
+    return $items;
+}
+
+/**
+ * Seed sidebar ACF fields with default items parsed from hardcoded HTML.
+ * Runs once on admin_init, populates empty repeaters with existing sidebar data.
+ */
+function seed_sidebar_defaults() {
+    if ( get_option('icenure_sidebar_defaults_seeded') ) {
+        return;
+    }
+    if ( ! function_exists('update_field') ) {
+        return;
+    }
+
+    $sidebars = get_sidebar_definitions();
+
+    foreach ($sidebars as $key => $label) {
+        $existing = get_field('sidebar_' . $key . '_links', 'option');
+        if ( ! empty($existing) ) {
+            continue;
+        }
+
+        $items = parse_sidebar_file($key);
+        if ( ! empty($items) ) {
+            update_field('field_sidebar_' . $key . '_links', $items, 'option');
+        }
+    }
+
+    update_option('icenure_sidebar_defaults_seeded', true);
+}
+
+add_action('admin_init', 'seed_sidebar_defaults');
 ?>
