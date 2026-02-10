@@ -23,6 +23,48 @@ function get_sidebar_definitions() {
 add_action('acf/init', 'register_sidebar_fields');
 
 /**
+ * Register the sidebar admin page.
+ * Uses acf_add_options_page() if ACF Pro is available,
+ * falls back to WordPress core add_menu_page() otherwise.
+ */
+add_action('admin_menu', 'register_sidebar_admin_page', 99);
+
+function register_sidebar_admin_page() {
+    // If ACF Pro already registered the page, skip
+    global $admin_page_hooks;
+    if ( isset($admin_page_hooks['sidebar-settings']) ) {
+        return;
+    }
+
+    add_menu_page(
+        'Налаштування бічних панелей',
+        'Бічні панелі',
+        'edit_posts',
+        'sidebar-settings',
+        'render_sidebar_settings_page',
+        'dashicons-align-right',
+        31
+    );
+}
+
+function render_sidebar_settings_page() {
+    echo '<div class="wrap">';
+    echo '<h1>Налаштування бічних панелей</h1>';
+
+    if ( function_exists('acf_add_options_page') ) {
+        // ACF Pro handles rendering via field group location rules
+        do_action('acf/input/admin_head');
+        acf_get_field_groups(array('options_page' => 'sidebar-settings'));
+    } else {
+        echo '<div class="notice notice-warning"><p>';
+        echo 'Для повної функціональності цієї сторінки необхідний плагін <strong>Advanced Custom Fields PRO</strong>.';
+        echo '</p></div>';
+    }
+
+    echo '</div>';
+}
+
+/**
  * Dynamically populate the sidebar selector in "Універсальна сторінка" template.
  * Uses key => label format so ACF stores the key (e.g. 'about') instead of the label.
  */
