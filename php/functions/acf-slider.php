@@ -3,24 +3,22 @@
  * ACF Options Page and Field Group for Main Slider
  */
 
-if ( ! function_exists('acf_add_options_page') ) {
-    return;
-}
-
-acf_add_options_page(array(
-    'page_title' => 'Налаштування слайдера',
-    'menu_title' => 'Слайдер',
-    'menu_slug'  => 'slider-settings',
-    'capability' => 'edit_posts',
-    'icon_url'   => 'dashicons-images-alt2',
-    'position'   => 30,
-));
-
 add_action('acf/init', 'register_slider_fields');
 
 function register_slider_fields() {
     if ( ! function_exists('acf_add_local_field_group') ) {
         return;
+    }
+
+    if ( function_exists('acf_add_options_page') ) {
+        acf_add_options_page(array(
+            'page_title' => 'Налаштування слайдера',
+            'menu_title' => 'Слайдер',
+            'menu_slug'  => 'slider-settings',
+            'capability' => 'edit_posts',
+            'icon_url'   => 'dashicons-images-alt2',
+            'position'   => 30,
+        ));
     }
 
     acf_add_local_field_group(array(

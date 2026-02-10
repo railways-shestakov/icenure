@@ -20,19 +20,6 @@ function get_sidebar_definitions() {
     );
 }
 
-if ( ! function_exists('acf_add_options_page') ) {
-    return;
-}
-
-acf_add_options_page(array(
-    'page_title' => 'Налаштування бічних панелей',
-    'menu_title' => 'Бічні панелі',
-    'menu_slug'  => 'sidebar-settings',
-    'capability' => 'edit_posts',
-    'icon_url'   => 'dashicons-align-right',
-    'position'   => 31,
-));
-
 add_action('acf/init', 'register_sidebar_fields');
 
 /**
@@ -49,6 +36,17 @@ function load_sidebar_choices($field) {
 function register_sidebar_fields() {
     if ( ! function_exists('acf_add_local_field_group') ) {
         return;
+    }
+
+    if ( function_exists('acf_add_options_page') ) {
+        acf_add_options_page(array(
+            'page_title' => 'Налаштування бічних панелей',
+            'menu_title' => 'Бічні панелі',
+            'menu_slug'  => 'sidebar-settings',
+            'capability' => 'edit_posts',
+            'icon_url'   => 'dashicons-align-right',
+            'position'   => 31,
+        ));
     }
 
     $sidebar_definitions = get_sidebar_definitions();
