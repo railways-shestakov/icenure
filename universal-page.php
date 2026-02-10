@@ -12,26 +12,17 @@
   $context = create_context();
   $template = DEVICE . '/page.twig';
   $sidebar = get_field('sidebar');
+  $sidebar_defs = function_exists('get_sidebar_definitions') ? get_sidebar_definitions() : array();
 
-  switch($sidebar){
-    case 'Про кафедру';
-      $sidebar = 'about';  
-    break;
-    case 'Освітній процес';
-      $sidebar = 'learning';  
-    break;
-    case 'Наукова робота';
-      $sidebar = 'science';  
-    break;
-    case 'Студентська робота';
-      $sidebar = 'students';  
-    break;
-    case 'Абітурієнту';
-      $sidebar = 'entrants';  
-    break;
-    default:
-      $sidebar = '';  
-    break;
+  // Backward compatibility: map old Ukrainian labels to keys
+  $label_to_key = array_flip($sidebar_defs);
+  if (isset($label_to_key[$sidebar])) {
+      $sidebar = $label_to_key[$sidebar];
+  }
+
+  // Validate sidebar key
+  if (!isset($sidebar_defs[$sidebar])) {
+      $sidebar = '';
   }
 
   // HEADER

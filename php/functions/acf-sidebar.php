@@ -3,6 +3,23 @@
  * ACF Options Page and Field Groups for Sidebar Management
  */
 
+/**
+ * Get sidebar definitions (key => label).
+ * Single source of truth for all sidebar types.
+ *
+ * @return array Associative array of sidebar_key => label
+ */
+function get_sidebar_definitions() {
+    return array(
+        'students' => 'Студентська робота',
+        'about'    => 'Про кафедру',
+        'learning' => 'Освітній процес',
+        'science'  => 'Наукова робота',
+        'news'     => 'Новини',
+        'entrants' => 'Абітурієнту',
+    );
+}
+
 if ( ! function_exists('acf_add_options_page') ) {
     return;
 }
@@ -18,37 +35,27 @@ acf_add_options_page(array(
 
 add_action('acf/init', 'register_sidebar_fields');
 
+/**
+ * Dynamically populate the sidebar selector in "Універсальна сторінка" template.
+ * Uses key => label format so ACF stores the key (e.g. 'about') instead of the label.
+ */
+add_filter('acf/load_field/key=field_5f099e61a6cf0', 'load_sidebar_choices');
+
+function load_sidebar_choices($field) {
+    $field['choices'] = get_sidebar_definitions();
+    return $field;
+}
+
 function register_sidebar_fields() {
     if ( ! function_exists('acf_add_local_field_group') ) {
         return;
     }
 
-    $sidebars = array(
-        array(
-            'key'   => 'students',
-            'label' => 'Студентська робота',
-        ),
-        array(
-            'key'   => 'about',
-            'label' => 'Про кафедру',
-        ),
-        array(
-            'key'   => 'learning',
-            'label' => 'Освітній процес',
-        ),
-        array(
-            'key'   => 'science',
-            'label' => 'Наукова робота',
-        ),
-        array(
-            'key'   => 'news',
-            'label' => 'Новини',
-        ),
-        array(
-            'key'   => 'entrants',
-            'label' => 'Абітурієнту',
-        ),
-    );
+    $sidebar_definitions = get_sidebar_definitions();
+    $sidebars = array();
+    foreach ($sidebar_definitions as $key => $label) {
+        $sidebars[] = array('key' => $key, 'label' => $label);
+    }
 
     $fields = array();
 
