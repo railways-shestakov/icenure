@@ -13,7 +13,7 @@
             <?=get_translation('Відмінники кафедри', 'Distinguished students of the department');?>
         </a>
         <a href="/students/best-students-stypendiaty-akademichnykh-stypendij-prezydenta-ukrainy-verkhovnoi-rady-ukrainy-ta-kabinetu-ministriv-ukrainy/">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><g><path d="M55,10H48V7a3,3,0,0,0-3-3H19a3,3,0,0,0-3,3v3H9a3,3,0,0,0-3,3V57a3,3,0,0,0,3,3H55a3,3,0,0,0,3-3V13A3,3,0,0,0,55,10ZM18,7a1,1,0,0,1,1-1H45a1,1,0,0,1,1,1v7a1,1,0,0,1-1,1H19a1,1,0,0,1-1-1ZM56,57a1,1,0,0,1-1,1H9a1,1,0,0,1-1-1V13a1,1,0,0,1,1-1h7v2a3,3,0,0,0,3,3H45a3,3,0,0,0,3-3V12h7a1,1,0,0,1,1,1Z"/><path d="M32,20a1,1,0,0,0-1,1V51.586l-5.293-5.293a1,1,0,0,0-1.414,1.414l7,7a1,1,0,0,0,1.414,0l7-7a1,1,0,0,0-1.414-1.414L33,51.586V21A1,1,0,0,0,32,20Z"/><path d="M22,34H42a1,1,0,0,0,.894-1.447l-4-8a1,1,0,0,0-1.788,0L34,30.764l-3.106-6.211a1,1,0,0,0-1.788,0l-4,8A1,1,0,0,0,22,34Zm10-7.236,3.106,6.211a1,1,0,0,0,1.788,0L39.618,32H24.382l2.724-5.447a1,1,0,0,0,.788-.789Z"/></g></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5.242 13.769 0 9.5 12 0l12 9.5-5.242 4.269C17.548 11.249 14.978 9.5 12 9.5c-2.977 0-5.548 1.748-6.758 4.269zM12 10a7 7 0 1 0 0 14 7 7 0 0 0 0-14z"/></svg>
             <?=get_translation('Стипендіати Пр., ВРУ, КМУ', 'Scholarship recipients');?>
         </a>
         <!--<a href="/students/calculator">
