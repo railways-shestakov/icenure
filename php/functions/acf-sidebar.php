@@ -1,6 +1,7 @@
 <?php
 /**
- * ACF Options Page and Field Groups for Sidebar Management
+ * Sidebar Management — Custom WordPress Admin Page
+ * Works without ACF Pro. Uses WordPress options API for data storage.
  */
 
 /**
@@ -20,22 +21,13 @@ function get_sidebar_definitions() {
     );
 }
 
-add_action('acf/init', 'register_sidebar_fields');
+/* ───────────────────────────────────────────────
+ * Admin page registration
+ * ─────────────────────────────────────────────── */
 
-/**
- * Register the sidebar admin page.
- * Uses acf_add_options_page() if ACF Pro is available,
- * falls back to WordPress core add_menu_page() otherwise.
- */
-add_action('admin_menu', 'register_sidebar_admin_page', 99);
+add_action('admin_menu', 'register_sidebar_admin_page');
 
 function register_sidebar_admin_page() {
-    // If ACF Pro already registered the page, skip
-    global $admin_page_hooks;
-    if ( isset($admin_page_hooks['sidebar-settings']) ) {
-        return;
-    }
-
     add_menu_page(
         'Налаштування бічних панелей',
         'Бічні панелі',
@@ -47,238 +39,320 @@ function register_sidebar_admin_page() {
     );
 }
 
-function render_sidebar_settings_page() {
-    echo '<div class="wrap">';
-    echo '<h1>Налаштування бічних панелей</h1>';
+add_action('admin_enqueue_scripts', 'sidebar_admin_enqueue');
 
-    if ( function_exists('acf_add_options_page') ) {
-        // ACF Pro handles rendering via field group location rules
-        do_action('acf/input/admin_head');
-        acf_get_field_groups(array('options_page' => 'sidebar-settings'));
-    } else {
-        echo '<div class="notice notice-warning"><p>';
-        echo 'Для повної функціональності цієї сторінки необхідний плагін <strong>Advanced Custom Fields PRO</strong>.';
-        echo '</p></div>';
+function sidebar_admin_enqueue($hook) {
+    if ( $hook !== 'toplevel_page_sidebar-settings' ) {
+        return;
     }
-
-    echo '</div>';
+    wp_enqueue_script('jquery-ui-sortable');
 }
 
-/**
- * Dynamically populate the sidebar selector in "Універсальна сторінка" template.
- * Uses key => label format so ACF stores the key (e.g. 'about') instead of the label.
- */
-add_filter('acf/load_field/key=field_5f099e61a6cf0', 'load_sidebar_choices');
+/* ───────────────────────────────────────────────
+ * Save handler
+ * ─────────────────────────────────────────────── */
 
-function load_sidebar_choices($field) {
-    $field['choices'] = get_sidebar_definitions();
-    return $field;
-}
+add_action('admin_init', 'handle_sidebar_settings_save');
 
-function register_sidebar_fields() {
-    if ( ! function_exists('acf_add_local_field_group') ) {
+function handle_sidebar_settings_save() {
+    if ( ! isset($_POST['sidebar_settings_nonce']) ) {
+        return;
+    }
+    if ( ! wp_verify_nonce($_POST['sidebar_settings_nonce'], 'save_sidebar_settings') ) {
+        wp_die('Помилка безпеки.');
+    }
+    if ( ! current_user_can('edit_posts') ) {
         return;
     }
 
-    if ( function_exists('acf_add_options_page') ) {
-        acf_add_options_page(array(
-            'page_title' => 'Налаштування бічних панелей',
-            'menu_title' => 'Бічні панелі',
-            'menu_slug'  => 'sidebar-settings',
-            'capability' => 'edit_posts',
-            'icon_url'   => 'dashicons-align-right',
-            'position'   => 31,
-        ));
+    $sidebar_key = sanitize_key($_POST['sidebar_key']);
+    $definitions = get_sidebar_definitions();
+    if ( ! isset($definitions[$sidebar_key]) ) {
+        return;
     }
 
-    $sidebar_definitions = get_sidebar_definitions();
-    $sidebars = array();
-    foreach ($sidebar_definitions as $key => $label) {
-        $sidebars[] = array('key' => $key, 'label' => $label);
+    $links = array();
+    if ( ! empty($_POST['links']) && is_array($_POST['links']) ) {
+        foreach ( $_POST['links'] as $link_data ) {
+            if ( empty($link_data['title_ua']) ) {
+                continue;
+            }
+            $is_section = ! empty($link_data['is_section_header']) ? 1 : 0;
+            $links[] = array(
+                'url'               => $is_section ? '' : sanitize_text_field(wp_unslash($link_data['url'])),
+                'title_ua'          => sanitize_text_field(wp_unslash($link_data['title_ua'])),
+                'title_en'          => sanitize_text_field(wp_unslash($link_data['title_en'])),
+                'svg_icon'          => wp_unslash(trim($link_data['svg_icon'])),
+                'is_section_header' => $is_section,
+            );
+        }
     }
 
-    $fields = array();
+    update_option('icenure_sidebar_' . $sidebar_key . '_links', $links);
 
-    foreach ($sidebars as $sidebar) {
-        $fields[] = array(
-            'key'   => 'field_sidebar_' . $sidebar['key'] . '_tab',
-            'label' => $sidebar['label'],
-            'name'  => '',
-            'type'  => 'tab',
-            'placement' => 'left',
-        );
+    wp_redirect(add_query_arg(array(
+        'page'    => 'sidebar-settings',
+        'tab'     => $sidebar_key,
+        'updated' => '1',
+    ), admin_url('admin.php')));
+    exit;
+}
 
-        $fields[] = array(
-            'key'          => 'field_sidebar_' . $sidebar['key'] . '_links',
-            'label'        => 'Посилання — ' . $sidebar['label'],
-            'name'         => 'sidebar_' . $sidebar['key'] . '_links',
-            'type'         => 'repeater',
-            'instructions' => 'Якщо порожньо — використовуються стандартні посилання з коду. Додайте хоча б одне посилання, щоб замінити стандартні.',
-            'required'     => 0,
-            'min'          => 0,
-            'max'          => 0,
-            'layout'       => 'block',
-            'button_label' => 'Додати посилання',
-            'sub_fields'   => array(
-                array(
-                    'key'          => 'field_sidebar_' . $sidebar['key'] . '_link_url',
-                    'label'        => 'URL',
-                    'name'         => 'url',
-                    'type'         => 'text',
-                    'instructions' => 'Наприклад: /educational-and-scientific-achievements',
-                    'required'     => 0,
-                    'placeholder'  => '/url-address',
-                    'conditional_logic' => array(
-                        array(
-                            array(
-                                'field' => 'field_sidebar_' . $sidebar['key'] . '_link_is_section',
-                                'operator' => '!=',
-                                'value' => '1',
-                            ),
-                        ),
-                    ),
-                ),
-                array(
-                    'key'          => 'field_sidebar_' . $sidebar['key'] . '_link_title_ua',
-                    'label'        => 'Назва (UA)',
-                    'name'         => 'title_ua',
-                    'type'         => 'text',
-                    'required'     => 1,
-                ),
-                array(
-                    'key'          => 'field_sidebar_' . $sidebar['key'] . '_link_title_en',
-                    'label'        => 'Назва (EN)',
-                    'name'         => 'title_en',
-                    'type'         => 'text',
-                    'required'     => 0,
-                ),
-                array(
-                    'key'          => 'field_sidebar_' . $sidebar['key'] . '_link_svg',
-                    'label'        => 'SVG іконка',
-                    'name'         => 'svg_icon',
-                    'type'         => 'textarea',
-                    'instructions' => 'Вставте SVG код іконки (тег &lt;svg&gt;...&lt;/svg&gt;)',
-                    'required'     => 0,
-                    'rows'         => 3,
-                    'new_lines'    => '',
-                ),
-                array(
-                    'key'          => 'field_sidebar_' . $sidebar['key'] . '_link_is_section',
-                    'label'        => 'Це заголовок секції?',
-                    'name'         => 'is_section_header',
-                    'type'         => 'true_false',
-                    'instructions' => 'Увімкніть для розділового заголовку (тег h3), який починає нову групу посилань',
-                    'default_value' => 0,
-                    'ui'           => 1,
-                ),
-            ),
-        );
+/* ───────────────────────────────────────────────
+ * Render settings page
+ * ─────────────────────────────────────────────── */
+
+function render_sidebar_settings_page() {
+    $definitions = get_sidebar_definitions();
+    $keys        = array_keys($definitions);
+    $active_tab  = isset($_GET['tab']) && isset($definitions[$_GET['tab']])
+        ? sanitize_key($_GET['tab'])
+        : $keys[0];
+
+    $links = get_sidebar_links($active_tab);
+    if ( $links === null ) {
+        $links = array();
     }
+    ?>
+    <div class="wrap">
+        <h1>Налаштування бічних панелей</h1>
 
-    acf_add_local_field_group(array(
-        'key'                  => 'group_sidebar_settings',
-        'title'                => 'Бічні панелі',
-        'fields'               => $fields,
-        'location'             => array(
-            array(
-                array(
-                    'param'    => 'options_page',
-                    'operator' => '==',
-                    'value'    => 'sidebar-settings',
-                ),
-            ),
-        ),
-        'style'                => 'default',
-        'label_placement'      => 'top',
-        'instruction_placement' => 'label',
-        'active'               => true,
-    ));
+        <?php if ( isset($_GET['updated']) ): ?>
+            <div class="notice notice-success is-dismissible"><p>Налаштування збережено.</p></div>
+        <?php endif; ?>
+
+        <nav class="nav-tab-wrapper" style="margin-bottom:15px">
+            <?php foreach ( $definitions as $key => $label ): ?>
+                <a href="<?php echo esc_url(add_query_arg(array('page' => 'sidebar-settings', 'tab' => $key), admin_url('admin.php'))); ?>"
+                   class="nav-tab <?php echo $key === $active_tab ? 'nav-tab-active' : ''; ?>">
+                    <?php echo esc_html($label); ?>
+                </a>
+            <?php endforeach; ?>
+        </nav>
+
+        <p class="description" style="margin-bottom:12px">
+            Якщо список порожній — використовуються стандартні посилання з коду.
+            Додайте хоча б одне посилання, щоб замінити стандартні.
+        </p>
+
+        <form method="post" action="">
+            <?php wp_nonce_field('save_sidebar_settings', 'sidebar_settings_nonce'); ?>
+            <input type="hidden" name="sidebar_key" value="<?php echo esc_attr($active_tab); ?>">
+
+            <div id="sidebar-links-container">
+                <?php foreach ( $links as $i => $link ): ?>
+                    <?php render_sidebar_link_row($i, $link); ?>
+                <?php endforeach; ?>
+            </div>
+
+            <p>
+                <button type="button" class="button" id="add-sidebar-link">+ Додати посилання</button>
+            </p>
+
+            <?php submit_button('Зберегти зміни'); ?>
+        </form>
+    </div>
+
+    <template id="sidebar-link-template">
+        <?php render_sidebar_link_row('__INDEX__', array(
+            'url' => '', 'title_ua' => '', 'title_en' => '', 'svg_icon' => '', 'is_section_header' => 0,
+        )); ?>
+    </template>
+
+    <style>
+        .sidebar-link-item{background:#fff;border:1px solid #ccd0d4;padding:14px 16px;margin:8px 0;cursor:move}
+        .sidebar-link-item.ui-sortable-helper{box-shadow:0 2px 8px rgba(0,0,0,.15)}
+        .sidebar-link-item.ui-sortable-placeholder{visibility:visible!important;background:#f0f6fc;border:2px dashed #2271b1}
+        .sidebar-link-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #eee}
+        .sidebar-link-header .link-number{font-weight:600;color:#1d2327;font-size:14px}
+        .sidebar-link-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px}
+        .sidebar-link-fields .field{display:flex;flex-direction:column}
+        .sidebar-link-fields .field.full-width{grid-column:1/-1}
+        .sidebar-link-fields .field label{font-weight:600;margin-bottom:3px;font-size:13px}
+        .sidebar-link-fields .field input[type="text"],
+        .sidebar-link-fields .field textarea{width:100%}
+        .section-header-check{display:flex;align-items:center;gap:6px;font-size:13px}
+        .section-header-check input{margin:0}
+    </style>
+
+    <script>
+    jQuery(function($){
+        var idx = <?php echo count($links); ?>;
+
+        /* Sortable */
+        $('#sidebar-links-container').sortable({
+            items: '.sidebar-link-item',
+            handle: '.sidebar-link-header',
+            placeholder: 'sidebar-link-item ui-sortable-placeholder',
+            opacity: 0.8,
+            tolerance: 'pointer',
+            stop: function(){ updateNumbers(); }
+        });
+
+        /* Add row */
+        $('#add-sidebar-link').on('click', function(){
+            var html = $('#sidebar-link-template').html().replace(/__INDEX__/g, idx);
+            $('#sidebar-links-container').append(html);
+            idx++;
+            updateNumbers();
+            $('#sidebar-links-container').sortable('refresh');
+        });
+
+        /* Remove row */
+        $(document).on('click', '.remove-sidebar-link', function(){
+            $(this).closest('.sidebar-link-item').remove();
+            updateNumbers();
+        });
+
+        /* Toggle URL/SVG fields for section headers */
+        $(document).on('change', '.is-section-header-cb', function(){
+            var item = $(this).closest('.sidebar-link-item');
+            var hide = this.checked;
+            item.find('.url-field-wrap, .svg-field-wrap').toggle(!hide);
+        });
+
+        function updateNumbers(){
+            $('#sidebar-links-container .sidebar-link-item').each(function(i){
+                $(this).find('.link-number').text('#' + (i + 1));
+            });
+        }
+    });
+    </script>
+    <?php
 }
 
 /**
- * Get sidebar links from ACF options.
+ * Render a single link row for the admin form.
+ */
+function render_sidebar_link_row($index, $link) {
+    $is_section = ! empty($link['is_section_header']);
+    $prefix = "links[{$index}]";
+    ?>
+    <div class="sidebar-link-item">
+        <div class="sidebar-link-header">
+            <span class="link-number">#<?php echo is_numeric($index) ? $index + 1 : ''; ?></span>
+            <div style="display:flex;align-items:center;gap:14px">
+                <label class="section-header-check">
+                    <input type="checkbox" class="is-section-header-cb"
+                           name="<?php echo $prefix; ?>[is_section_header]"
+                           value="1" <?php checked($is_section); ?>>
+                    Заголовок секції
+                </label>
+                <button type="button" class="button button-link-delete remove-sidebar-link">Видалити</button>
+            </div>
+        </div>
+        <div class="sidebar-link-fields">
+            <div class="field url-field-wrap" <?php if ($is_section) echo 'style="display:none"'; ?>>
+                <label>URL</label>
+                <input type="text" name="<?php echo $prefix; ?>[url]"
+                       value="<?php echo esc_attr($link['url']); ?>"
+                       placeholder="/url-address">
+            </div>
+            <div class="field">
+                <label>Назва (UA) *</label>
+                <input type="text" name="<?php echo $prefix; ?>[title_ua]"
+                       value="<?php echo esc_attr($link['title_ua']); ?>">
+            </div>
+            <div class="field">
+                <label>Назва (EN)</label>
+                <input type="text" name="<?php echo $prefix; ?>[title_en]"
+                       value="<?php echo esc_attr($link['title_en']); ?>">
+            </div>
+            <div class="field full-width svg-field-wrap" <?php if ($is_section) echo 'style="display:none"'; ?>>
+                <label>SVG іконка</label>
+                <textarea name="<?php echo $prefix; ?>[svg_icon]" rows="2"
+                          placeholder="<svg>...</svg>"><?php echo esc_textarea($link['svg_icon']); ?></textarea>
+            </div>
+        </div>
+    </div>
+    <?php
+}
+
+/* ───────────────────────────────────────────────
+ * Data access (used by sidebar-*.php templates)
+ * ─────────────────────────────────────────────── */
+
+/**
+ * Get sidebar links from WordPress options.
  * Returns array of links or null if none configured.
  *
- * @param string $sidebar_key Sidebar identifier (students, about, learning, science, news, entrants)
- * @return array|null Array of link data or null if not configured
+ * @param string $sidebar_key Sidebar identifier
+ * @return array|null
  */
 function get_sidebar_links($sidebar_key) {
-    if ( ! function_exists('get_field') ) {
+    $links = get_option('icenure_sidebar_' . $sidebar_key . '_links');
+    if ( empty($links) || ! is_array($links) ) {
         return null;
     }
-
-    $links = get_field('sidebar_' . $sidebar_key . '_links', 'option');
-
-    if ( empty($links) ) {
-        return null;
-    }
-
     return $links;
 }
 
 /**
- * Render sidebar links from ACF.
- * Returns HTML string of sidebar content, or empty string if not configured.
+ * Render sidebar links as HTML.
+ * Returns HTML string or empty string if not configured.
  *
  * @param string $sidebar_key Sidebar identifier
- * @return string HTML output
+ * @return string
  */
 function render_sidebar_links($sidebar_key) {
     $links = get_sidebar_links($sidebar_key);
-
     if ( $links === null ) {
         return '';
     }
 
-    $output = '';
+    $output   = '';
     $in_block = false;
 
-    foreach ($links as $index => $link) {
-        $is_section = !empty($link['is_section_header']);
+    foreach ( $links as $link ) {
+        $is_section = ! empty($link['is_section_header']);
 
-        if ($is_section) {
-            if ($in_block) {
-                $output .= "    </div>\n";
+        if ( $is_section ) {
+            if ( $in_block ) {
+                $output  .= "    </div>\n";
                 $in_block = false;
             }
             $title_ua = $link['title_ua'];
-            $title_en = !empty($link['title_en']) ? $link['title_en'] : $link['title_ua'];
-            $output .= "\n    <h3>\n";
-            $output .= "        " . get_translation($title_ua, $title_en) . "\n";
-            $output .= "    </h3>\n\n";
+            $title_en = ! empty($link['title_en']) ? $link['title_en'] : $link['title_ua'];
+            $output  .= "\n    <h3>\n";
+            $output  .= "        " . get_translation($title_ua, $title_en) . "\n";
+            $output  .= "    </h3>\n\n";
             continue;
         }
 
-        if (!$in_block) {
-            $output .= "    <div class=\"sidebar__block\">\n";
+        if ( ! $in_block ) {
+            $output  .= "    <div class=\"sidebar__block\">\n";
             $in_block = true;
         }
 
-        $url = esc_attr($link['url']);
+        $url      = esc_attr($link['url']);
         $title_ua = $link['title_ua'];
-        $title_en = !empty($link['title_en']) ? $link['title_en'] : $link['title_ua'];
-        $svg = !empty($link['svg_icon']) ? $link['svg_icon'] : '';
+        $title_en = ! empty($link['title_en']) ? $link['title_en'] : $link['title_ua'];
+        $svg      = ! empty($link['svg_icon']) ? $link['svg_icon'] : '';
 
         $output .= "        <a href=\"{$url}\">\n";
-        if ($svg) {
+        if ( $svg ) {
             $output .= "            {$svg}\n";
         }
         $output .= "            " . get_translation($title_ua, $title_en) . "\n";
         $output .= "        </a>\n";
     }
 
-    if ($in_block) {
+    if ( $in_block ) {
         $output .= "    </div>\n";
     }
 
     return $output;
 }
 
+/* ───────────────────────────────────────────────
+ * Parser & seeder (populates from hardcoded HTML)
+ * ─────────────────────────────────────────────── */
+
 /**
  * Parse a sidebar-{key}.php file and extract link data from hardcoded HTML.
  *
  * @param string $sidebar_key Sidebar identifier
- * @return array Array of link items with url, title_ua, title_en, svg_icon, is_section_header
+ * @return array
  */
 function parse_sidebar_file($sidebar_key) {
     $file = get_template_directory() . '/sidebar-' . $sidebar_key . '.php';
@@ -288,7 +362,7 @@ function parse_sidebar_file($sidebar_key) {
 
     $content = file_get_contents($file);
 
-    // Remove HTML comments (skip commented-out links like calculator)
+    // Remove HTML comments
     $content = preg_replace('/<!--[\s\S]*?-->/', '', $content);
 
     // Extract fallback section (between else: and endif:)
@@ -298,15 +372,12 @@ function parse_sidebar_file($sidebar_key) {
         $html = $content;
     }
 
-    $items = array();
-
-    // Combined regex: match h3 section headers OR a links with SVG and get_translation
+    $items   = array();
     $pattern = '/(?:<h3>\s*<\?=\s*get_translation\(\s*\'([^\']*)\'\s*,\s*\'([^\']*)\'\s*\)\s*;?\s*\?>\s*<\/h3>)|(?:<a\s+href="([^"]+)">\s*((?:<svg[\s\S]*?<\/svg>)?\s*)<\?=\s*get_translation\(\s*\'([^\']*)\'\s*,\s*\'([^\']*)\'\s*\)\s*;?\s*\?>\s*<\/a>)/i';
 
     if ( preg_match_all($pattern, $html, $matches, PREG_SET_ORDER) ) {
-        foreach ($matches as $m) {
+        foreach ( $matches as $m ) {
             if ( ! empty($m[1]) ) {
-                // h3 section header
                 $items[] = array(
                     'url'               => '',
                     'title_ua'          => $m[1],
@@ -315,7 +386,6 @@ function parse_sidebar_file($sidebar_key) {
                     'is_section_header' => 1,
                 );
             } else {
-                // a link
                 $items[] = array(
                     'url'               => $m[3],
                     'title_ua'          => $m[5],
@@ -331,28 +401,25 @@ function parse_sidebar_file($sidebar_key) {
 }
 
 /**
- * Seed sidebar ACF fields with default items parsed from hardcoded HTML.
- * Runs once on admin_init, populates empty repeaters with existing sidebar data.
+ * Seed sidebar options with default items parsed from hardcoded HTML.
+ * Runs once on admin_init.
  */
 function seed_sidebar_defaults() {
     if ( get_option('icenure_sidebar_defaults_seeded') ) {
         return;
     }
-    if ( ! function_exists('update_field') ) {
-        return;
-    }
 
     $sidebars = get_sidebar_definitions();
 
-    foreach ($sidebars as $key => $label) {
-        $existing = get_field('sidebar_' . $key . '_links', 'option');
+    foreach ( $sidebars as $key => $label ) {
+        $existing = get_option('icenure_sidebar_' . $key . '_links');
         if ( ! empty($existing) ) {
             continue;
         }
 
         $items = parse_sidebar_file($key);
         if ( ! empty($items) ) {
-            update_field('field_sidebar_' . $key . '_links', $items, 'option');
+            update_option('icenure_sidebar_' . $key . '_links', $items);
         }
     }
 
@@ -360,4 +427,14 @@ function seed_sidebar_defaults() {
 }
 
 add_action('admin_init', 'seed_sidebar_defaults');
-?>
+
+/* ───────────────────────────────────────────────
+ * Universal Page integration (works with ACF free)
+ * ─────────────────────────────────────────────── */
+
+add_filter('acf/load_field/key=field_5f099e61a6cf0', 'load_sidebar_choices');
+
+function load_sidebar_choices($field) {
+    $field['choices'] = get_sidebar_definitions();
+    return $field;
+}
